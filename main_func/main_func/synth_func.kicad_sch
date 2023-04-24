@@ -1,0 +1,46 @@
+(kicad_sch (version 20211123) (generator eeschema)
+
+  (uuid 22bb6c80-05a9-4d89-98b0-f4c23fe6c1ce)
+
+  (paper "A4")
+
+  (lib_symbols
+  )
+
+
+  (sheet (at 142.24 83.82) (size 45.72 33.02) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
+    (fill (color 0 0 0 0.0000))
+    (uuid 289f8d94-cf1a-4684-9846-71756abe3891)
+    (property "Sheet name" "outputs" (id 0) (at 142.24 83.1084 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheet file" "outputs.kicad_sch" (id 1) (at 142.24 117.4246 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+  )
+
+  (sheet (at 143.51 34.29) (size 115.57 31.75) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
+    (fill (color 0 0 0 0.0000))
+    (uuid 43ed34c4-5177-44a6-80c1-29a0dd51f1c6)
+    (property "Sheet name" "DA" (id 0) (at 143.51 33.5784 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheet file" "DA.kicad_sch" (id 1) (at 143.51 66.6246 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+  )
+
+  (sheet (at 29.21 34.29) (size 99.06 80.01) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
+    (fill (color 0 0 0 0.0000))
+    (uuid bad0e66f-256c-44b4-ab8e-0c5241cee9da)
+    (property "Sheet name" "mainfunc_stm32f44" (id 0) (at 29.21 33.5784 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheet file" "mainfunc_stm.kicad_sch" (id 1) (at 29.21 114.8846 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+  )
+)

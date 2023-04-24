@@ -1,0 +1,46 @@
+(kicad_sch (version 20211123) (generator eeschema)
+
+  (uuid 54450700-9366-44b8-9c34-bc0d2b77cc3e)
+
+  (paper "A4")
+
+  (lib_symbols
+  )
+
+
+  (sheet (at 40.64 29.21) (size 66.04 49.53) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
+    (fill (color 0 0 0 0.0000))
+    (uuid 8a01d3e6-2b4d-4954-8119-3bc4a45a55df)
+    (property "Sheet name" "stm32f446" (id 0) (at 40.64 28.4984 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheet file" "stm32f446.kicad_sch" (id 1) (at 40.64 79.3246 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+  )
+
+  (sheet (at 46.99 93.98) (size 55.88 38.1) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
+    (fill (color 0 0 0 0.0000))
+    (uuid 8c5c434e-118e-46c8-a772-b0d15b1b474a)
+    (property "Sheet name" "MIDI.JACKS" (id 0) (at 46.99 93.2684 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheet file" "midi_jacks.kicad_sch" (id 1) (at 46.99 132.6646 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+  )
+
+  (sheet (at 125.73 31.75) (size 46.99 38.1) (fields_autoplaced)
+    (stroke (width 0.1524) (type solid) (color 0 0 0 0))
+    (fill (color 0 0 0 0.0000))
+    (uuid f6528876-4fca-43f8-971c-c63baf711f46)
+    (property "Sheet name" "dac_conv" (id 0) (at 125.73 31.0384 0)
+      (effects (font (size 1.27 1.27)) (justify left bottom))
+    )
+    (property "Sheet file" "dac_conv.kicad_sch" (id 1) (at 125.73 70.4346 0)
+      (effects (font (size 1.27 1.27)) (justify left top))
+    )
+  )
+)
