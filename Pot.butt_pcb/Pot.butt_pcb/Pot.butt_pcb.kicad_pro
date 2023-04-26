@@ -348,6 +348,10 @@
     [
       "48ac4c30-fa2e-4a67-8f7a-c41e1b53fef1",
       "LEDS_WS2812B"
+    ],
+    [
+      "014f8295-6d70-452f-ab2a-4d78d17e2492",
+      "dcdc_convs"
     ]
   ],
   "text_variables": {}
