@@ -1,4 +1,4 @@
-19855453949765392
+19858819251908646
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -55726,6 +55726,13 @@ solder jumper open
 0
 5
 3
+Korean Hroparts Elec PJ-3250-5A
+Korean Hroparts Elec PJ-3250-5A
+
+
+0
+5
+5
 LED_SMD
 LED-APA102-2020
 http://www.led-color.com/upload/201604/APA102-2020%20SMD%20LED.pdf
@@ -84732,5 +84739,12 @@ midi_7pin
 
 
 0
+7
+6
+tactile_button
+ROCPU Switches TP10721645
+
+
 0
-0
+4
+4
