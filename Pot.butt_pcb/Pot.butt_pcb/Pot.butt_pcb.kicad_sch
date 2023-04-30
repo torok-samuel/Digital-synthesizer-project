@@ -925,7 +925,7 @@
       (reference "D56") (unit 1) (value "RED LED") (footprint "LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder")
     )
     (path "/7b0b2e9d-7b62-4d86-ba92-8de66c2be81f/1eb867a7-a323-42cb-ac2b-c2b6bdde2702"
-      (reference "J1") (unit 1) (value "Conn_01x04_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Horizontal")
+      (reference "J1") (unit 1) (value "Conn_01x04_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x04_P2.54mm_Vertical")
     )
     (path "/7b0b2e9d-7b62-4d86-ba92-8de66c2be81f/15a4e205-af30-4b9b-9583-d540116a0f2c"
       (reference "J2") (unit 1) (value "Conn_01x05_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Horizontal")
@@ -991,16 +991,16 @@
       (reference "R14") (unit 1) (value "100") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
     )
     (path "/180fa346-8a0c-4cbb-a203-5f8596e28190/787fe404-bfef-4411-94f8-ff72d0eec98c"
-      (reference "R15") (unit 1) (value "10K") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
+      (reference "R15") (unit 1) (value "100") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
     )
     (path "/180fa346-8a0c-4cbb-a203-5f8596e28190/6e4175ec-cddd-460c-9715-f3cf1ce74863"
-      (reference "R16") (unit 1) (value "10K") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
+      (reference "R16") (unit 1) (value "100") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
     )
     (path "/180fa346-8a0c-4cbb-a203-5f8596e28190/4edc674e-c284-4db0-b7e6-85bf19d717d5"
-      (reference "R17") (unit 1) (value "10K") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
+      (reference "R17") (unit 1) (value "100") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
     )
     (path "/180fa346-8a0c-4cbb-a203-5f8596e28190/66132251-22b2-4e0c-811e-afa3a707717e"
-      (reference "R18") (unit 1) (value "10K") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
+      (reference "R18") (unit 1) (value "100") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
     )
     (path "/7b0b2e9d-7b62-4d86-ba92-8de66c2be81f/2662bc70-ca83-4b18-bcd8-fa13eb2bb614"
       (reference "R19") (unit 1) (value "100k") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
@@ -1039,91 +1039,91 @@
       (reference "R30") (unit 1) (value "1k") (footprint "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/2424a15e-5ce3-4322-bcbe-ce13bb29fe40"
-      (reference "RV1") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV1") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/8779130a-8bad-48ca-bb1c-22e6b269dc9b"
-      (reference "RV2") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV2") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/36ee6cee-2684-44cd-9dba-5a4e809c4304"
-      (reference "RV3") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV3") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/0177a8b8-eada-4b67-802f-70978801afb5"
-      (reference "RV4") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV4") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/6ceced77-b6bc-4a23-a0ef-efccaf8270a5"
-      (reference "RV5") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV5") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/0bec2906-520e-4ec1-931a-7749576d586a"
-      (reference "RV6") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV6") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/b5a90c87-8ff1-4dbd-9e50-a52d990a9095"
-      (reference "RV7") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV7") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/b4cc6bb1-3547-4184-a6ad-61770c704cbd"
-      (reference "RV8") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV8") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/f3b1c511-a52a-46c5-a1cd-68756da6cca4"
-      (reference "RV9") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV9") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/6533a3d7-5492-47d0-bd90-44480ae8d19a"
-      (reference "RV10") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV10") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/5a6eb3c4-27e5-4af6-b71f-84254abd74d4"
-      (reference "RV11") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV11") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/c031f799-3699-4973-829d-1bc94d1dc5d0/c3e4c698-d6ad-4870-927c-312813a311bf"
-      (reference "RV12") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV12") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/22256021-04e3-492b-a0aa-1d984c242801"
-      (reference "RV13") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV13") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/bb2c5893-5966-40ed-8180-57499075f17c"
-      (reference "RV14") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV14") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/aff063eb-628b-4682-ae0e-78bde4495170"
-      (reference "RV15") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV15") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/b7622f30-8120-4d5a-a8a8-448b95ef29c8"
-      (reference "RV16") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV16") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/16d182a4-a3a5-41fd-8197-93926701cd55"
-      (reference "RV17") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV17") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/5134efcd-ce94-409c-afdb-2d7340f83005"
-      (reference "RV18") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV18") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/27b4d9f2-610b-4a54-a39d-c91786a0577b"
-      (reference "RV19") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV19") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/16865b94-78db-4460-9c8c-9d16fa36decd"
-      (reference "RV20") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Horizontal")
+      (reference "RV20") (unit 1) (value "R_Potentiometer") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/7b0b2e9d-7b62-4d86-ba92-8de66c2be81f/678454c7-572a-4ac9-a952-11504ff844e1"
       (reference "SW1") (unit 1) (value "SW_Push") (footprint "tactile_button:ROCPU Switches TP10721645")
     )
     (path "/4f56872a-d64c-45f9-9389-413194bcf1a4/d79a6777-5713-496d-9f38-50f4810229ef"
-      (reference "SW2") (unit 1) (value "SW_DPDT") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Horizontal")
+      (reference "SW2") (unit 1) (value "SW_DPDT") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/4f56872a-d64c-45f9-9389-413194bcf1a4/c685073c-060b-41bd-aef7-91581b60c04b"
-      (reference "SW3") (unit 1) (value "SW_DPDT") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Horizontal")
+      (reference "SW3") (unit 1) (value "SW_DPDT") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/4f56872a-d64c-45f9-9389-413194bcf1a4/61cdfc25-531b-41fc-ac0e-1ff70bb335c3"
-      (reference "SW4") (unit 1) (value "SW_DPDT") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Horizontal")
+      (reference "SW4") (unit 1) (value "SW_DPDT") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/4f56872a-d64c-45f9-9389-413194bcf1a4/a1c35b34-5dbc-41f8-a93e-f3706ed4bfb9"
-      (reference "SW5") (unit 1) (value "SW_DPDT") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Horizontal")
+      (reference "SW5") (unit 1) (value "SW_DPDT") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/4f56872a-d64c-45f9-9389-413194bcf1a4/8cde16b8-2874-4e87-aeaf-a0422bea66b9"
-      (reference "SW6") (unit 1) (value "SW_DPDT") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Horizontal")
+      (reference "SW6") (unit 1) (value "SW_DPDT") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/4f56872a-d64c-45f9-9389-413194bcf1a4/18d57c17-b777-46d5-9adc-709c48da03df"
-      (reference "SW7") (unit 1) (value "SW_DPDT") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Horizontal")
+      (reference "SW7") (unit 1) (value "SW_DPDT") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/4f56872a-d64c-45f9-9389-413194bcf1a4/7048d53d-c19b-4bfb-b593-97043dc857cb"
-      (reference "SW8") (unit 1) (value "SW_DPDT") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Horizontal")
+      (reference "SW8") (unit 1) (value "SW_DPDT") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/4f56872a-d64c-45f9-9389-413194bcf1a4/b36fb312-9d12-4904-b4a3-86505c42db91"
-      (reference "SW9") (unit 1) (value "SW_DPDT") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Horizontal")
+      (reference "SW9") (unit 1) (value "SW_DPDT") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x03_P2.54mm_Vertical")
     )
     (path "/7413b2cc-42f9-4b79-8935-d73b76c29038/a9486174-81a2-4d91-abca-4430c153b7d8"
       (reference "SW10") (unit 1) (value "SW_Push") (footprint "tactile_button:ROCPU Switches TP10721645")

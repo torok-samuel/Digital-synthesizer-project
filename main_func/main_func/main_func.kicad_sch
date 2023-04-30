@@ -406,7 +406,7 @@
       (reference "J4") (unit 1) (value "Korean Hroparts Elec PJ-3250-5A") (footprint "Korean Hroparts Elec PJ-3250-5A:Korean Hroparts Elec PJ-3250-5A")
     )
     (path "/738674ad-0c41-4796-89b5-f4d9de9daf67/8c5c434e-118e-46c8-a772-b0d15b1b474a/2d1e3f71-f575-4f26-bc96-46890f449b69"
-      (reference "J8") (unit 1) (value "Conn_01x02_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Horizontal")
+      (reference "J8") (unit 1) (value "Conn_01x02_Male") (footprint "Capacitor_THT:C_Rect_L7.5mm_W6.5mm_P5.00mm")
     )
     (path "/738674ad-0c41-4796-89b5-f4d9de9daf67/8a01d3e6-2b4d-4954-8119-3bc4a45a55df/b6b2cccb-33d1-496a-8361-52dec3d5af25"
       (reference "J9") (unit 1) (value "Conn_01x06_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Horizontal")
