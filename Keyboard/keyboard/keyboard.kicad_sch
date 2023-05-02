@@ -103,6 +103,9 @@
     (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/f01a08c4-d9f1-4838-af18-b59bca81082c"
       (reference "#PWR017") (unit 1) (value "GND") (footprint "")
     )
+    (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/b6b841e3-3cba-4bc4-814f-3b385b4d6db2"
+      (reference "#PWR0101") (unit 1) (value "GND") (footprint "")
+    )
     (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/6182ca9b-1bd4-4f37-bff8-2540085c3fe2"
       (reference "C1") (unit 1) (value "100nF") (footprint "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder")
     )
@@ -173,10 +176,13 @@
       (reference "D15") (unit 1) (value "RED LED") (footprint "LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder")
     )
     (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/b69731dc-a74d-4be9-8b11-0a21dad4be18"
-      (reference "J1") (unit 1) (value "Conn_01x05_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Horizontal")
+      (reference "J1") (unit 1) (value "Conn_01x05_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical")
     )
     (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/6cbc6b9c-37f8-4d4a-9780-7abd8c87c83f"
-      (reference "J2") (unit 1) (value "Conn_01x06_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Horizontal")
+      (reference "J2") (unit 1) (value "Conn_01x06_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical")
+    )
+    (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/d15041f5-551f-4110-970b-1972227248c7"
+      (reference "J3") (unit 1) (value "Conn_01x06_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical")
     )
     (path "/1102bd9a-5afc-41a6-b521-47e47bf6e05c/33f3bdd1-b296-45cf-aa20-3cbbf6ec1e9c"
       (reference "L1") (unit 1) (value "6.8uH") (footprint "inductors:inductor_koherelec")
