@@ -436,20 +436,12 @@
       "plugpot_stm32g030k6t6"
     ],
     [
-      "c031f799-3699-4973-829d-1bc94d1dc5d0",
-      "plugin_potentiometer"
-    ],
-    [
-      "4f56872a-d64c-45f9-9389-413194bcf1a4",
-      "Switches"
-    ],
-    [
       "7413b2cc-42f9-4b79-8935-d73b76c29038",
       "slidepot_stm32g030k6t6"
     ],
     [
       "0f8bd06f-60b1-4be8-90d9-1a7f1cd60020",
-      "slide_potentiometer"
+      "potentiometer_switches"
     ],
     [
       "180fa346-8a0c-4cbb-a203-5f8596e28190",
