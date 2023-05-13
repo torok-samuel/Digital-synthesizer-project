@@ -97,6 +97,9 @@
     (path "/1102bd9a-5afc-41a6-b521-47e47bf6e05c/3f31be44-1d8e-483b-8a17-68ceff23fd83"
       (reference "#PWR015") (unit 1) (value "+3.3V") (footprint "")
     )
+    (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/285de188-88c3-4059-8e92-7f711052d1cd"
+      (reference "#PWR016") (unit 1) (value "GND") (footprint "")
+    )
     (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/9a1463c2-4102-4772-bb55-d7035fec3297"
       (reference "#PWR017") (unit 1) (value "GND") (footprint "")
     )
@@ -175,9 +178,6 @@
     (path "/31ae1ddb-55f8-4875-b94d-87a4d0c86414/0b59c5d0-c9c5-408c-89ec-5104b2186544"
       (reference "#PWR042") (unit 1) (value "GND") (footprint "")
     )
-    (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/6b1d7f66-6b41-4392-987b-3b5c86878fa0"
-      (reference "#PWR0101") (unit 1) (value "GND") (footprint "")
-    )
     (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/6182ca9b-1bd4-4f37-bff8-2540085c3fe2"
       (reference "C1") (unit 1) (value "100nF") (footprint "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder")
     )
@@ -208,17 +208,35 @@
     (path "/1102bd9a-5afc-41a6-b521-47e47bf6e05c/43a1ce24-08e9-4e4e-806b-5c52aacae56d"
       (reference "D13") (unit 1) (value "FUXINSEMI DSK34 (SOD-123)") (footprint "Diode_SMD:D_SOD-123")
     )
+    (path "/31ae1ddb-55f8-4875-b94d-87a4d0c86414/2013a5d1-11d3-44b2-9376-a1e6562747fa"
+      (reference "H1") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/31ae1ddb-55f8-4875-b94d-87a4d0c86414/1b611a5a-c8cc-448b-ade2-f8b02b153069"
+      (reference "H2") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/31ae1ddb-55f8-4875-b94d-87a4d0c86414/5198d1e5-b09e-41a1-9c29-8ff9319999a1"
+      (reference "H3") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/31ae1ddb-55f8-4875-b94d-87a4d0c86414/cd67eda0-e301-4211-ba49-50d22d300878"
+      (reference "H4") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/31ae1ddb-55f8-4875-b94d-87a4d0c86414/ec31f4f3-6fa9-4731-8658-75f393c936fa"
+      (reference "H5") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/31ae1ddb-55f8-4875-b94d-87a4d0c86414/10a72d05-5183-45e1-86f6-66a83df224c4"
+      (reference "H6") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
     (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/b69731dc-a74d-4be9-8b11-0a21dad4be18"
       (reference "J1") (unit 1) (value "Conn_01x05_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical")
     )
     (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/ecdb34a2-4cdc-4a30-a88c-cbf5ac83399c"
       (reference "J2") (unit 1) (value "Conn_01x10_Male") (footprint "Connector_IDC:IDC-Header_2x05_P2.54mm_Horizontal")
     )
-    (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/afde0f92-ccb7-4a94-83b1-9fa93f1a8461"
-      (reference "J3") (unit 1) (value "Conn_01x10_Male") (footprint "Connector_IDC:IDC-Header_2x05_P2.54mm_Horizontal")
+    (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/c2781a9c-e09e-4114-9291-d59af6ea7821"
+      (reference "J3") (unit 1) (value "Conn_01x10_Male") (footprint "Connector_IDC:IDC-Header_2x05_P2.54mm_Vertical")
     )
     (path "/f28e56e7-283b-4b9a-ae27-95e89770fbf8/759b0b2c-e08f-4524-a5c8-13ac080bca54"
-      (reference "J4") (unit 1) (value "Conn_01x10_Male") (footprint "Connector_IDC:IDC-Header_2x05_P2.54mm_Horizontal")
+      (reference "J4") (unit 1) (value "Conn_01x10_Male") (footprint "Connector_IDC:IDC-Header_2x05_P2.54mm_Vertical")
     )
     (path "/1102bd9a-5afc-41a6-b521-47e47bf6e05c/33f3bdd1-b296-45cf-aa20-3cbbf6ec1e9c"
       (reference "L1") (unit 1) (value "6.8uH") (footprint "inductors:inductor_koherelec")

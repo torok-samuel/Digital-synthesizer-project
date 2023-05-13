@@ -75,6 +75,9 @@
     (path "/738674ad-0c41-4796-89b5-f4d9de9daf67/f6528876-4fca-43f8-971c-c63baf711f46/de82a426-63a3-4424-bdc5-94647e508bcc"
       (reference "#PWR06") (unit 1) (value "GND") (footprint "")
     )
+    (path "/738674ad-0c41-4796-89b5-f4d9de9daf67/8c5c434e-118e-46c8-a772-b0d15b1b474a/3f628cb8-f008-45f2-8699-9bb726c51da3"
+      (reference "#PWR07") (unit 1) (value "GND") (footprint "")
+    )
     (path "/738674ad-0c41-4796-89b5-f4d9de9daf67/f6528876-4fca-43f8-971c-c63baf711f46/11aed667-8316-40df-b182-7d1ead128aba"
       (reference "#PWR08") (unit 1) (value "GND") (footprint "")
     )
@@ -392,6 +395,21 @@
     )
     (path "/a5366173-e34b-4614-a470-cbf5cabdce6a/c35f3fc4-fd86-44e9-b563-9319f6484731"
       (reference "F1") (unit 1) (value "1812L") (footprint "Littelfuse_1812L:FUSM4632X200N")
+    )
+    (path "/a5366173-e34b-4614-a470-cbf5cabdce6a/87513186-0b87-40a1-b7b2-2e9efb27ab9d"
+      (reference "H1") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/a5366173-e34b-4614-a470-cbf5cabdce6a/51c56921-5eb1-4954-850c-967f8045f749"
+      (reference "H2") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/a5366173-e34b-4614-a470-cbf5cabdce6a/fd65f7d5-0f19-4db1-9242-630af04f4aca"
+      (reference "H3") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/a5366173-e34b-4614-a470-cbf5cabdce6a/34879d86-1270-450e-84d5-221075efe04e"
+      (reference "H4") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/a5366173-e34b-4614-a470-cbf5cabdce6a/ec43dd40-6ad6-49bd-b053-c16bfed2c3bd"
+      (reference "H5") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
     )
     (path "/7a46b049-6fed-493f-87c2-d03e8197877b/572491e9-498d-43f3-a124-1219c84601cb/c8aaf566-24f0-4c2c-bd71-dfa569a0f61e"
       (reference "IC1") (unit 1) (value "LN4056-ESOP8") (footprint "SamacSys_Parts:SOIC127P600X175-9N")

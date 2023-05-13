@@ -169,9 +169,6 @@
     (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/7d55faf7-9795-4cc0-9e20-e10085503f89"
       (reference "#PWR026") (unit 1) (value "GND") (footprint "")
     )
-    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/7501760d-2170-4dbf-b4c1-95721ad4bb90"
-      (reference "#PWR027") (unit 1) (value "GND") (footprint "")
-    )
     (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/03cb0672-765c-411c-84d8-dc9eed386245"
       (reference "#PWR028") (unit 1) (value "+3.3V") (footprint "")
     )
@@ -222,6 +219,9 @@
     )
     (path "/7b0b2e9d-7b62-4d86-ba92-8de66c2be81f/dd6e314d-05ac-4fb8-8556-fc394b83fd81"
       (reference "#PWR0103") (unit 1) (value "GND") (footprint "")
+    )
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/43acbc7c-c527-4bae-b3a2-6669582c9666"
+      (reference "#PWR0104") (unit 1) (value "GND") (footprint "")
     )
     (path "/7413b2cc-42f9-4b79-8935-d73b76c29038/b9f08927-e330-4389-a83c-27fdc5905a14"
       (reference "#PWR0149") (unit 1) (value "GND") (footprint "")
@@ -850,6 +850,24 @@
     (path "/7413b2cc-42f9-4b79-8935-d73b76c29038/230fbbc8-6d5e-4071-bffc-02092405bc03"
       (reference "D55") (unit 1) (value "RED LED") (footprint "LED_SMD:LED_0805_2012Metric_Pad1.15x1.40mm_HandSolder")
     )
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/158aad19-9736-45f6-b36f-9e02c74763a3"
+      (reference "H1") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/42fdaf50-6fa0-4325-8503-ef4174de307c"
+      (reference "H2") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/2dc7334b-8d78-46e6-ad1a-10ae7885379d"
+      (reference "H3") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/4d3a7e7e-93da-421c-83b5-209a560b4c07"
+      (reference "H4") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/adf309ef-5569-421c-9e36-11183d539bf4"
+      (reference "H5") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/23a4d058-160c-480e-afd5-51ae3ab5804a"
+      (reference "H6") (unit 1) (value "MountingHole") (footprint "MountingHole:MountingHole_3.2mm_M3_Pad_Via")
+    )
     (path "/7b0b2e9d-7b62-4d86-ba92-8de66c2be81f/dd4d59cc-0ee8-4346-9e6a-3d63bf3b7f0d"
       (reference "J1") (unit 1) (value "Conn_01x10_Male") (footprint "Connector_IDC:IDC-Header_2x05_P2.54mm_Horizontal")
     )
@@ -859,13 +877,13 @@
     (path "/7413b2cc-42f9-4b79-8935-d73b76c29038/7f587363-7f11-43ee-bd4d-7538e6d97df6"
       (reference "J3") (unit 1) (value "Conn_01x05_Male") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Horizontal")
     )
-    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/b85edbf7-ad39-4636-945f-d4a1f10e3bd5"
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/d6830087-180e-46c6-bcf1-bc6e13920461"
       (reference "J4") (unit 1) (value "Conn_01x40_Male") (footprint "Connector_IDC:IDC-Header_2x20_P2.54mm_Vertical")
     )
-    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/1dcab7d8-266f-4c34-a9dd-c3a53abda3c9"
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/92df04f6-20c5-4386-ad26-99cb4f0f7979"
       (reference "J5") (unit 1) (value "Conn_01x40_Male") (footprint "Connector_IDC:IDC-Header_2x20_P2.54mm_Vertical")
     )
-    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/99913f13-bdfe-4f63-a1a7-9d002b01486a"
+    (path "/0f8bd06f-60b1-4be8-90d9-1a7f1cd60020/7af95071-17eb-4c4c-b23d-9bb5115348ae"
       (reference "J6") (unit 1) (value "Conn_01x40_Male") (footprint "Connector_IDC:IDC-Header_2x20_P2.54mm_Vertical")
     )
     (path "/014f8295-6d70-452f-ab2a-4d78d17e2492/323ddd7f-366b-4dd9-8d22-bc62470b5400"
