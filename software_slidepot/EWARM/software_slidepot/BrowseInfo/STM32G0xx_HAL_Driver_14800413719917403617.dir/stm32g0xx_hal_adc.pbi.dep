@@ -1,0 +1,44 @@
+C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\software_slidepot\BrowseInfo\STM32G0xx_HAL_Driver_14800413719917403617.dir\stm32g0xx_hal_adc.pbi: \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\Drivers\STM32G0xx_HAL_Driver\Src\stm32g0xx_hal_adc.c \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Core\Inc\stm32g0xx_hal_conf.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_rcc.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_def.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\CMSIS\Device\ST\STM32G0xx\Include\stm32g0xx.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\CMSIS\Device\ST\STM32G0xx\Include\stm32g030xx.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\CMSIS\Include\core_cm0plus.h \
+  E:\iar_systems\arm\inc\c\stdint.h E:\iar_systems\arm\inc\c\ycheck.h \
+  E:\iar_systems\arm\inc\c\yvals.h \
+  E:\iar_systems\arm\inc\c\DLib_Defaults.h \
+  E:\iar_systems\arm\inc\c\DLib_Config_Full.h \
+  E:\iar_systems\arm\inc\c\DLib_Product.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\CMSIS\Include\cmsis_version.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\CMSIS\Include\cmsis_compiler.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\CMSIS\Include\cmsis_iccarm.h \
+  E:\iar_systems\arm\inc\c\aarch32\iccarm_builtin.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\CMSIS\Include\mpu_armv7.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\CMSIS\Device\ST\STM32G0xx\Include\system_stm32g0xx.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\Legacy\stm32_hal_legacy.h \
+  E:\iar_systems\arm\inc\c\stddef.h E:\iar_systems\arm\inc\c\ysizet.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_ll_rcc.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_rcc_ex.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_gpio.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_gpio_ex.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_dma.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_ll_dma.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_ll_dmamux.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_dma_ex.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_cortex.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_adc.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_ll_adc.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_adc_ex.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_adc_ex.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_exti.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_flash.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_flash_ex.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_i2c.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_i2c_ex.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_pwr.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_pwr_ex.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_tim.h \
+  C:\Users\torok\Dokumentumok\KiCad_projects\Digital\ synthesizer\ project\software_slidepot\EWARM\..\Drivers\STM32G0xx_HAL_Driver\Inc\stm32g0xx_hal_tim_ex.h

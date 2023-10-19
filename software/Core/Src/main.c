@@ -18,11 +18,17 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <stdint.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "sinwave.c"
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
+//project headers
+#include "digitalsynth_main_i2c.h"
+//#include "samples.h"
+#include "digitalsynth_dsp.h"
 
 /* USER CODE END Includes */
 
@@ -34,6 +40,17 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define BUFFER_SIZE 256;
+
+#define TICKDELAY       10        //10ms - num/ms/s
+#define ONEBITTIMEI2C   1000/48000        //1 bit time for i2c
+
+#define SLIDEPOT_ADDR 0x12<<1
+#define PLUGPOT_ADDR 0x13<<1
+#define KEYPOT_ADDR 0x14<<1
+
+#define SLIDEPOT_RXSIZE 12
+#define PLUGPOT_RXSIZE 13
+#define KEY_RXSIZE 2
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,8 +64,7 @@ I2C_HandleTypeDef hi2c1;
 I2S_HandleTypeDef hi2s1;
 DMA_HandleTypeDef hdma_spi1_tx;
 
-SPI_HandleTypeDef hspi2;
-DMA_HandleTypeDef hdma_spi2_tx;
+TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
@@ -57,277 +73,60 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
 
+HAL_StatusTypeDef status;
+//hi2c1->Instance->SR1&
+
 //PCM1753 SPI setup
-const uint16_t SPI_R16 = 0x10FF;
-const uint16_t SPI_R17 = 0x11FF;
-const uint16_t SPI_R18 = 0x1200;
-const uint16_t SPI_R19 = 0x1300;
-const uint16_t SPI_R20 = 0x1404;
-const uint16_t SPI_R22 = 0x1600;
-
-//sinewave buffer
-//extern uint16_t sinwave[];
-uint16_t sinwave[] = {
-128,
-131,
-134,
-137,
-140,
-143,
-146,
-149,
-152,
-156,
-159,
-162,
-165,
-168,
-171,
-174,
-176,
-179,
-182,
-185,
-188,
-191,
-193,
-196,
-199,
-201,
-204,
-206,
-209,
-211,
-213,
-216,
-218,
-220,
-222,
-224,
-226,
-228,
-230,
-232,
-234,
-235,
-237,
-239,
-240,
-242,
-243,
-244,
-246,
-247,
-248,
-249,
-250,
-251,
-251,
-252,
-253,
-253,
-254,
-254,
-254,
-255,
-255,
-255,
-255,
-255,
-255,
-255,
-254,
-254,
-253,
-253,
-252,
-252,
-251,
-250,
-249,
-248,
-247,
-246,
-245,
-244,
-242,
-241,
-239,
-238,
-236,
-235,
-233,
-231,
-229,
-227,
-225,
-223,
-221,
-219,
-217,
-215,
-212,
-210,
-207,
-205,
-202,
-200,
-197,
-195,
-192,
-189,
-186,
-184,
-181,
-178,
-175,
-172,
-169,
-166,
-163,
-160,
-157,
-154,
-151,
-148,
-145,
-142,
-138,
-135,
-132,
-129,
-126,
-123,
-120,
-117,
-113,
-110,
-107,
-104,
-101,
-8,
-5,
-2,
-9,
-6,
-3,
-0,
-7,
-4,
-1,
-9,
-6,
-3,
-0,
-8,
-5,
-3,
-0,
-8,
-5,
-3,
-0,
-8,
-6,
-4,
-2,
-0,
-8,
-6,
-4,
-2,
-0,
-9,
-7,
-6,
-4,
-3,
-1,
-0,
-9,
-8,
-7,
-6,
-5,
-4,
-3,
-3,
-2,
-2,
-1,
-1,
-0,
-0,
-0,
-0,
-0,
-0,
-0,
-1,
-1,
-1,
-2,
-2,
-3,
-4,
-4,
-5,
-6,
-7,
-8,
-9,
-11,
-12,
-13,
-15,
-16,
-18,
-20,
-21,
-23,
-25,
-27,
-29,
-31,
-33,
-35,
-37,
-39,
-42,
-44,
-46,
-49,
-51,
-54,
-56,
-59,
-62,
-64,
-67,
-70,
-73,
-76,
-79,
-81,
-84,
-87,
-90,
-93,
-96,
-99,
-103,
-106,
-109,
-112,
-115,
-118,
-121,
-124,
-127
+//R16-0x10FF, R18-0x1200, 0x1300, 0x1404, 0x1600
+const uint16_t SPI_SETUP_REG[] = {
+0x10FF, //R16
+0x11FF, //R17
+0x1200, //R18
+0x1300, //R19
+0x1405,         //R20, LEFT - 0X1405, I2S - 0x1404, RIGHT - 0x1400
+0x1600  //R22
 };
-//i2s
-static uint16_t *BufPtr = &sinwave[0];
 
+//variables
+//I2c
+HAL_StatusTypeDef status;
+uint8_t u8TimerI2C_counter;
+uint16_t slaveADDR;
+uint8_t * RxData;
+uI2CMainControls ui2cControl;
+uint8_t i2cRxSize;
+
+uint32_t u32LastReadTick = 0;
+
+  
+GPIO_PinState gpio1, gpio2;
+
+//idk
+int k = 0;
+
+//audio buffer
+int32_t i32AudioBuffer[ 2*256 ];
+
+//dsp
+int32_t arri32AudioBuffer[1024];
+int32_t arri32AudioBuffer2[1024];
+uint16_t u16WaveformNum = 0;
+uint8_t u8Waveform = 0;
+uint32_t u32AudioAmp = 0;
+uint8_t u8WaveformFlag = 0;
+uint8_t u8Range = 4;
+uint8_t u8PButton = 0;
+
+int32_t* pAudioBuffer;
+
+//i2s
+//static uint16_t *BufPtr0_255 = &sinwave0_255[0];
+//static int16_t *BufPtr16 = &sinwave16[0];
+//static uint16_t *BufPtr16 = &sinwave16[0];
+uint8_t u8I2SHCCW;
+uint8_t u8I2SCCW;
+uint8_t u8I2SHCCK;
+uint8_t u8I2SCCK;
 
 /* USER CODE END PV */
 
@@ -341,46 +140,373 @@ static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void spi_setup_dac(){
-  //NSS working? using NSS as GPIO??
+/*
+void hal_spi_setup_dac(){
+  LL_SPI_TransmitData16(
   HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R16, 1, 10);
   HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R17, 1, 10);
   HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R18, 1, 10);
   HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R19, 1, 10);
   HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R20, 1, 10);
   HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R22, 1, 10);
-  
-  //https://www.digikey.com/en/maker/projects/getting-started-with-stm32-how-to-use-spi/09eab3dfe74c4d0391aaaa99b0a8ee17
 }
 
-
-void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s)
-{
-/*
-  uint8_t buffer_channel[16];
-  for(int i = 0; i < 255; i++){
-    buffer_channel = 
-  }
 */
-  BufPtr = &sinwave[0];
+void ll_spi_setup();
+void ll_send_data();
+
+
+void ll_spi_setup(){
+  //HAL_Delay(10);
+  unsigned int SPI_SETUP_SIZE = sizeof(SPI_SETUP_REG)/sizeof(SPI_SETUP_REG[0]);
+  //spi enable
+  LL_SPI_Enable(SPI2);
+  //send datas
+  ll_send_data(SPI_SETUP_REG, SPI_SETUP_SIZE);
+  
+  //nss soft??
+
+  
 }
 
+void ll_send_data(uint16_t* data, unsigned int size){
+  //*********
+  //SOURCES
+  //https://hackaday.com/2022/10/24/bare-metal-stm32-setting-up-and-using-spi/
+  //https://usermanual.wiki/Document/Reference20manualF446RE.1190689300/view
+  //http://www.disca.upv.es/aperles/arm_cortex_m3/llibre/st/STM32F439xx_User_Manual/group__spi__ll__em__write__read.html
+  //*********
+  //sending "size" number of datas
+  for(uint16_t i=0; i<size; i++)
+  {  
+    //set nss low to start communication
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
+
+    //wait while transfer register is empty
+    while(!(SPI2->SR & LL_SPI_SR_TXE));
+    //Write data (8-16 bits) into SPI_DR
+    //SPI2->DR = data[i];
+    LL_SPI_TransmitData16(SPI2, data[i]);
+  
+    //wait while transfer register is empty
+    while(!(SPI2->SR & LL_SPI_SR_TXE));
+    //Wait for SPI_SR_BSY (status register: bus busy) to become false.
+    while((SPI2->SR & LL_SPI_SR_BSY)); 
+    //nss low, end of spi comm
+    HAL_Delay(2);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+    HAL_Delay(10);
+  }
+  //Clear overrun flag????
+  HAL_Delay(10);
+  
+  
+  //other ideas, mainly trash
+  //while(LL_SPI_ReadReg(hi2s1.Instance->SR, LL_SPI_SR_TXE));
+  //Write data (8-16 bits) into SPI_DR
+  //LL_SPI_TransmitData16(hi2s1.Instance, data);
+  
+}
+
+
+/*
+int spiReadWrite16(SPI_TypeDef* SPIx, uint16_t *rbuf , const uint16_t *tbuf, int cnt, enum spiSpeed speed){
+    // SPI 16-bit read/write transaction
+    SPI_DataSizeConfig(SPIx, SPI_DataSize_16b);
+    int i;
+    SPIx ->CR1 = (SPIx ->CR1 & ~ SPI_BaudRatePrescaler_256 ) |
+    speeds [ speed ];
+    for (i = 0; i < cnt; i++){
+        if (tbuf) {
+        SPI_I2S_SendData (SPIx , *tbuf ++);
+        } else {
+        SPI_I2S_SendData (SPIx , 0xffff);
+        }
+
+        while ( SPI_I2S_GetFlagStatus (SPIx , SPI_I2S_FLAG_RXNE ) == RESET);
+
+        if (rbuf) {
+        *rbuf ++ = SPI_I2S_ReceiveData (SPIx);
+        } else {
+        SPI_I2S_ReceiveData (SPIx);
+        }
+    }
+    //SPI_DataSizeConfig(SPIx, SPIDataSize_8b);
+    return i;
+}
+*/
 
 /*
 void HAL_I2SEx_TxRxHalfCpltCallback(I2S_HandleTypeDef *hi2s1){
-  BufPtr = &sinwave[0];
+  UNUSED(hi2s1);
 }
 
 void HAL_I2SEx_TxRxCpltCallback(I2S_HandleTypeDef *hi2s1){
-  BufPtr = &sinwave[BUFFER_SIZE/2];
+  UNUSED(hi2s1);
 }
 */
+
+
+//!!!!!!!!!!!!
+/*
+void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s1){ 
+  if(u8I2SHCC != u8Waveform){
+    audiobuffer[elso fele]másolás
+}
+void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s1){
+  if( (u8I2SHCC != waveform) & (u8I2SCC != waveform){
+    második felét átírni;
+  }
+  u8I2SHCC = waveform;
+  u8I2SCC = waveform;
+}
+*/
+
+/*
+void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s1){ 
+  if(u8I2SHCCW != ui2cControl.sI2CMainControl.u2ButtWaveform1 | u8I2SHCCK != ui2cControl.sI2CMainControl.u8TestKey1){
+    if(pAudioBuffer == arri32AudioBuffer){
+      dsp(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer2);
+    }
+    else{
+      dsp(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer);
+    }
+    u8I2SHCCW = ui2cControl.sI2CMainControl.u2ButtWaveform1;
+    u8I2SHCCK = ui2cControl.sI2CMainControl.u8TestKey1;
+
+}
+}
+void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s1){
+  if( ( (u8I2SHCCW == ui2cControl.sI2CMainControl.u2ButtWaveform1) & 
+     (u8I2SCCW != ui2cControl.sI2CMainControl.u2ButtWaveform1) ) |
+     ( (u8I2SHCCK == ui2cControl.sI2CMainControl.u8TestKey1) & 
+     (u8I2SCCK != ui2cControl.sI2CMainControl.u8TestKey1) ) ){
+    if(pAudioBuffer == arri32AudioBuffer){
+      pAudioBuffer = arri32AudioBuffer2;
+      HAL_I2S_DMAStop(hi2s1);
+      HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(hi2s1, (uint16_t*)pAudioBuffer, 2*u16WaveformNum);
+    }
+    else{
+      pAudioBuffer = arri32AudioBuffer;
+      HAL_I2S_DMAStop(hi2s1);
+      HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(hi2s1, (uint16_t*)pAudioBuffer, 2*u16WaveformNum);
+    }    
+    u8I2SCCW = ui2cControl.sI2CMainControl.u2ButtWaveform1;
+    u8I2SCCK = ui2cControl.sI2CMainControl.u8TestKey1;
+  }
+  
+}
+*/
+
+void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s1){ 
+  
+    if(pAudioBuffer == arri32AudioBuffer){
+      dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer2);
+    }
+    else{
+      dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer);
+    }
+
+}
+
+void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s1){
+  
+    if(pAudioBuffer == arri32AudioBuffer){
+      pAudioBuffer = arri32AudioBuffer2;
+      //HAL_I2S_DMAStop(hi2s1);
+      //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(hi2s1, (uint16_t*)pAudioBuffer, 2*u16WaveformNum);
+    }
+    else{
+      pAudioBuffer = arri32AudioBuffer;
+      //HAL_I2S_DMAStop(hi2s1);
+      //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(hi2s1, (uint16_t*)pAudioBuffer, 2*u16WaveformNum);
+    }  
+
+}
+
+void i2c_1bitcycle(){
+  unsigned u32CycleReadTick = 0;
+  //SCL=0
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  //wait 1 i2c bit time
+  u32CycleReadTick = HAL_GetTick();
+  while((HAL_GetTick() - u32CycleReadTick) > 1);
+  //SCL=1
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+  //wait 1 i2c bit time
+  u32CycleReadTick = HAL_GetTick();
+  while((HAL_GetTick() - u32CycleReadTick) > 1);
+}
+
+
+void reset_i2c(I2C_HandleTypeDef *hi2c){
+  unsigned u32ResetReadTick = 0;
+  
+  /*
+  //if SDA=1 & SCL=0
+  if((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET)
+     & (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) == GPIO_PIN_RESET))
+        //wait for SCL=1
+        while(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) != GPIO_PIN_SET){};
+  
+  //if SCL=1 & SDA=1
+  if((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET)
+     & (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) == GPIO_PIN_SET)){
+        //SCL=0
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+        //wait for SCL write
+        while(!((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET)
+          & (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) == GPIO_PIN_RESET))){};
+        //wait 3 i2c bit time
+        u32ResetReadTick = HAL_GetTick();
+        while((HAL_GetTick() - u32ResetReadTick) > 3*ONEBITTIMEI2C){};
+     }
+  */
+  //if SDA=0
+/*
+  if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_RESET){
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+    u32ResetReadTick = HAL_GetTick();
+    while((HAL_GetTick() - u32ResetReadTick) > 3*ONEBITTIMEI2C){};
+  }
+*/
+
+  //clear flags
+  //__HAL_I2C_CLEAR_FLAG(__HANDLE__, __FLAG__)
+    //I2C_FLAG_OVR
+    //I2C_FLAG_AF
+    //I2C_FLAG_ARLO
+    //I2C_FLAG_BERR
+    
+  //reset i2c
+  /*
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  u32ResetReadTick = HAL_GetTick();
+  while((HAL_GetTick() - u32ResetReadTick) > 100*ONEBITTIMEI2C){};  
+  CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  MX_GPIO_Init();  
+  MX_I2C1_Init();
+*/
+  
+  
+  /*
+  // Generate Start
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
+  //wait 3 i2c bit time
+  u32ResetReadTick = HAL_GetTick();
+  while((HAL_GetTick() - u32ResetReadTick) > 3*ONEBITTIMEI2C){};
+  // Generate Stop
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
+  //wait 3 i2c bit time
+  u32ResetReadTick = HAL_GetTick();
+  while((HAL_GetTick() - u32ResetReadTick) > 3*ONEBITTIMEI2C){};
+*/
+
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  
+  //SCL
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  
+  //SDA
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  
+  
+  while(!((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET))){
+  //while(READ_BIT(hi2c->Instance->SR2, I2C_SR2_BUSY)){
+    for(int i=0; i<9; i++)
+      i2c_1bitcycle();
+  }
+  
+  //SDA
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  
+  
+  //SDA falledg while SCL High 
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_Delay(1);
+  i2c_1bitcycle();
+  i2c_1bitcycle();
+  //SDA risedg while SCL High 
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+  
+  MX_GPIO_Init();
+  MX_I2C1_Init();
+  
+  
+  /*
+  //startstop 
+  //__HAL_LOCK(hi2c);
+  hi2c->State       = HAL_I2C_STATE_BUSY_RX;
+  hi2c->Mode        = HAL_I2C_MODE_MASTER;
+  hi2c->ErrorCode   = HAL_I2C_ERROR_NONE;
+  // Generate Start
+  //SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
+  // Generate Stop
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
+  //while(!(READ_BIT(hi2c->Instance->SR1, I2C_SR1_SB)));
+  //wait 3 i2c bit time
+  u32ResetReadTick = HAL_GetTick();
+  while((HAL_GetTick() - u32ResetReadTick) > 3){};
+  // Generate Stop
+  //SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
+  //wait 3 i2c bit time
+  u32ResetReadTick = HAL_GetTick();
+  while((HAL_GetTick() - u32ResetReadTick) > 3){};
+  hi2c->State = HAL_I2C_STATE_READY;
+  hi2c->Mode = HAL_I2C_MODE_NONE;
+  // Process Unlocked
+  __HAL_UNLOCK(hi2c);
+*/
+  
+  /*
+  
+  //SDA
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  
+  //SCL
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  
+  gpio1 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7);
+  gpio2 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7);
+*/
+  //MX_GPIO_Init();
+  //MX_I2C1_Init();
+
+  
+  /*
+  //start i2c
+  //set ack
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
+  //set start
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
+  while(!(READ_BIT(hi2c->Instance->SR1, I2C_SR1_SB)));*/
+  
+}
 
 
 
@@ -422,17 +548,166 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_USART3_UART_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-  spi_setup_dac();
-  HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, BufPtr, 1);
-  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1,&(uint16_t)sinwave[0],(uint16_t) BUFFER_SIZE);
+  
+
+  //initalization of variables
+  //memset(arri32AudioBuffer, 0, 10000);
+
+  
+  //testing i2c datatypes
+  //i2c_datatype_testing(ui2cControl);
+  
+
+  /*
+  //audio generating
+  uint32_t audio_data, audio_datal, audio_datah;
+  uint32_t audio_amplitude = 0x7FFFFFFF;      //32 BIT DATA
+  //uint32_t audio_amplitude = 0xFFFFFF/2;      //24 BIT DATA
+  //uint32_t audio_amplitude = 0x00007FFF;      //16 BIT DATA
+  uint32_t audio_highmask = 0xFFFF0000;
+  uint32_t audio_lowmask = 0x0000FFFF;
+  double audio_pi = atan(1)*4;
+  
+  for( uint16_t u16Index = 0; u16Index < 256; u16Index++ )
+  {
+    //data generating
+    audio_data= (int32_t)( audio_amplitude*sin( 2*audio_pi*u16Index/256 ) );
+    //endianness
+    audio_datah = audio_data & audio_highmask;
+    audio_datal = audio_data & audio_lowmask;
+    audio_data = (audio_datah>>16) | (audio_datal<<16);
+    //write buffers
+    i32AudioBuffer[ u16Index*2 + 0 ] = audio_data;
+    i32AudioBuffer[ u16Index*2 + 1 ] = audio_data;
+    
+    //i32AudioBuffer[ u16Index*2 + 0 ] = (int32_t)( 0x7FFFFFFF*sin( 2*3.1415*u16Index/256 ) ) >> 16;
+    //i32AudioBuffer[ u16Index*2 + 1 ] = i32AudioBuffer[ u16Index*2 ];
+    
+    //notes
+    //audio_amplitude - 0x00007FFF, no endianness change
+    //left ~180Hz, right noise
+    //reference manual 872                      https://www.st.com/resource/en/reference_manual/rm0390-stm32f446xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf
+    //pcm1753 datasheet 15                      https://www.ti.com/lit/ds/symlink/pcm1753.pdf?ts=1695897542261&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FPCM1753
+  }
+
+  */
+  
+  
+  //set nss high, no spi comm yet
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+  //spi setup
+  ll_spi_setup();
+  //i2s dma tx start
+  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, &sinwave[0], 256);
+  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1,(uint16_t*)&sinwave[0],(uint16_t) BUFFER_SIZE);
+  
+    
+
+  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)i32AudioBuffer, 512);
+  u8Range = 4;
+  //u8PButton = 0;
+  //u8Waveform = 3;
+  u8Waveform = ui2cControl.sI2CMainControl.u2ButtWaveform1;
+  u8PButton = ui2cControl.sI2CMainControl.u8TestKey1;
+  u32AudioAmp = 0x7FFFFFFF;
+  //u32AudioAmp = 0x7FFFFFFF/2;
+  pAudioBuffer = arri32AudioBuffer2;
+  singen_def(u32AudioAmp);
+  sawgen_def(u32AudioAmp);
+  trigen_def(u32AudioAmp);
+  sqrgen_def(u32AudioAmp);
+  dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, pAudioBuffer);
+  dsp(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer);
+  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)arri32AudioBuffer, 2*u16WaveformNum);
+  HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)pAudioBuffer, 1024);
+  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)arri32AudioBuffer, 512);
+  
+  
+  //I2C setup
+
+  uint8_t TxData1[3] = {0x0, 0x1, 0x0};
+  uint8_t TxData2[3] = {0x0, 0x0, 0x1};
+  
+  //uint8_t RxData[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  
+  //HAL_StatusTypeDef status1;
+  //HAL_StatusTypeDef status2;
+  
+  //I2C timer
+  u8TimerI2C_counter = 0;
+  //HAL_TIM_Base_Start_IT(&htim6);
+  
+  u32LastReadTick = HAL_GetTick();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  
+  //reset_i2c(&hi2c1);
+
+  
   while (1)
   {
+    //Transmit
+    //status1 = HAL_I2C_Master_Transmit(&hi2c1, slaveADDR, TxData1, 3, 1000);
+    //HAL_Delay(1000);
+    //status2 = HAL_I2C_Master_Transmit(&hi2c1, slaveADDR, TxData2, 3, 1000);
+    //HAL_Delay(1000);
+    
+    
+    //Recieve
+    //status1 = HAL_I2C_Master_Receive(&hi2c1, slaveADDR, RxData, 20, 1000);
+    //HAL_Delay(1000);
+    //status2 = HAL_I2C_Master_Receive(&hi2c1, slaveADDR, RxData, 20, 1000);
+
+
+    if ((HAL_GetTick() - u32LastReadTick) > TICKDELAY){
+      switch(u8TimerI2C_counter){
+      case 0:
+        //SlidePot
+        RxData = &ui2cControl.au8I2CMainByteAccess[0];
+        slaveADDR = SLIDEPOT_ADDR;
+        i2cRxSize = SLIDEPOT_RXSIZE;
+        //Plugpot
+        //RxData = &ui2cControl.au8I2CMainByteAccess[0];
+        //slaveADDR = PLUGPOT_ADDR;
+        //i2cRxSize = PLUGPOT_RXSIZE;
+        break;
+      case 1:
+        //Plugpot
+        RxData = &ui2cControl.au8I2CMainByteAccess[12];
+        slaveADDR = PLUGPOT_ADDR;
+        i2cRxSize = PLUGPOT_RXSIZE;      
+        break;
+      case 2:
+        //Keyboard
+        RxData = &ui2cControl.au8I2CMainByteAccess[25];
+        slaveADDR = KEYPOT_ADDR;
+        i2cRxSize = KEY_RXSIZE;  
+        break;
+      default:
+        //SlidePot
+        RxData = &ui2cControl.au8I2CMainByteAccess[0];
+        slaveADDR = SLIDEPOT_ADDR;
+        i2cRxSize = SLIDEPOT_RXSIZE;  
+        break;
+      }
+      status = HAL_I2C_Master_Receive(&hi2c1, slaveADDR, RxData, i2cRxSize, 30);
+      //if(status == HAL_BUSY)
+      //  reset_i2c(&hi2c1);
+      if(u8TimerI2C_counter >= 2 | u8TimerI2C_counter < 0){
+      //if(u8TimerI2C_counter >= 1 | u8TimerI2C_counter < 0){
+        u8TimerI2C_counter = 0;
+      }
+      else{
+        u8TimerI2C_counter++;
+      }
+    u32LastReadTick = HAL_GetTick();
+    }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -539,10 +814,10 @@ static void MX_I2S1_Init(void)
   /* USER CODE END I2S1_Init 1 */
   hi2s1.Instance = SPI1;
   hi2s1.Init.Mode = I2S_MODE_MASTER_TX;
-  hi2s1.Init.Standard = I2S_STANDARD_PHILIPS;
-  hi2s1.Init.DataFormat = I2S_DATAFORMAT_16B;
+  hi2s1.Init.Standard = I2S_STANDARD_MSB;
+  hi2s1.Init.DataFormat = I2S_DATAFORMAT_32B;
   hi2s1.Init.MCLKOutput = I2S_MCLKOUTPUT_ENABLE;
-  hi2s1.Init.AudioFreq = I2S_AUDIOFREQ_16K;
+  hi2s1.Init.AudioFreq = I2S_AUDIOFREQ_48K;
   hi2s1.Init.CPOL = I2S_CPOL_LOW;
   hi2s1.Init.ClockSource = I2S_CLOCK_PLL;
   hi2s1.Init.FullDuplexMode = I2S_FULLDUPLEXMODE_DISABLE;
@@ -568,29 +843,92 @@ static void MX_SPI2_Init(void)
 
   /* USER CODE END SPI2_Init 0 */
 
-  /* USER CODE BEGIN SPI2_Init 1 */
+  LL_SPI_InitTypeDef SPI_InitStruct = {0};
 
+  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* Peripheral clock enable */
+  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI2);
+
+  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
+  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+  /**SPI2 GPIO Configuration
+  PC1   ------> SPI2_MOSI
+  PB10   ------> SPI2_SCK
+  */
+  GPIO_InitStruct.Pin = LL_GPIO_PIN_1;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  GPIO_InitStruct.Alternate = LL_GPIO_AF_7;
+  LL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = LL_GPIO_PIN_10;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  GPIO_InitStruct.Alternate = LL_GPIO_AF_5;
+  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+  
   /* USER CODE END SPI2_Init 1 */
   /* SPI2 parameter configuration*/
-  hspi2.Instance = SPI2;
-  hspi2.Init.Mode = SPI_MODE_MASTER;
-  hspi2.Init.Direction = SPI_DIRECTION_1LINE;
-  hspi2.Init.DataSize = SPI_DATASIZE_16BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi2.Init.CRCPolynomial = 10;
-  if (HAL_SPI_Init(&hspi2) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  SPI_InitStruct.TransferDirection = LL_SPI_HALF_DUPLEX_TX;
+  SPI_InitStruct.Mode = LL_SPI_MODE_MASTER;
+  SPI_InitStruct.DataWidth = LL_SPI_DATAWIDTH_16BIT;
+  SPI_InitStruct.ClockPolarity = LL_SPI_POLARITY_LOW;
+  SPI_InitStruct.ClockPhase = LL_SPI_PHASE_1EDGE;
+  SPI_InitStruct.NSS = LL_SPI_NSS_SOFT;
+  SPI_InitStruct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV16;
+  SPI_InitStruct.BitOrder = LL_SPI_MSB_FIRST;
+  SPI_InitStruct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
+  SPI_InitStruct.CRCPoly = 10;
+  LL_SPI_Init(SPI2, &SPI_InitStruct);
+  LL_SPI_SetStandard(SPI2, LL_SPI_PROTOCOL_MOTOROLA);
   /* USER CODE BEGIN SPI2_Init 2 */
 
   /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 16-1;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 10000-1;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
 
 }
 
@@ -703,12 +1041,8 @@ static void MX_DMA_Init(void)
 
   /* DMA controller clock enable */
   __HAL_RCC_DMA2_CLK_ENABLE();
-  __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
-  /* DMA1_Stream4_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
   /* DMA2_Stream3_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream3_IRQn);
@@ -722,6 +1056,7 @@ static void MX_DMA_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
 
@@ -730,6 +1065,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PB12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

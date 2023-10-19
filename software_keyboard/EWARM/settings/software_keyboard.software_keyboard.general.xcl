@@ -1,0 +1,15 @@
+"E:\iar_systems\arm\bin\armPROC.dll" 
+
+"E:\iar_systems\arm\bin\armSTLINK.dll" 
+
+"C:\Users\torok\Dokumentumok\KiCad_projects\Digital synthesizer project\software_keyboard\EWARM\software_keyboard\Exe\software_keyboard.out" 
+
+--plugin="E:\iar_systems\arm\bin\armbat.dll" 
+
+--device_macro="E:\iar_systems\arm/config/debugger/ST/STM32G0xx.dmac" 
+
+--flash_loader="E:\iar_systems\arm/config/flashloader/ST/FlashSTM32G041x6.board" 
+
+
+
+
