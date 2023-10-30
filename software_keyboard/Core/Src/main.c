@@ -85,7 +85,7 @@ static void MX_I2C1_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_TIM14_Init(void);
 /* USER CODE BEGIN PFP */
-
+void i2c_reset();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -177,6 +177,8 @@ int main(void)
     //HAL_Delay(10);
     if ((HAL_GetTick() - u32LastReadTick) > TICKDELAY){
       status = HAL_I2C_Slave_Transmit(&hi2c1, sCont.au8I2CKeyByteAccess, TXSIZE,30);
+      if(status != HAL_OK)
+        i2c_reset(&hi2c1);
       u32LastReadTick = HAL_GetTick();
     }
       
@@ -401,7 +403,13 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void i2c_reset(I2C_HandleTypeDef *hi2c){
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  HAL_Delay( 10 );
+  CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  //MX_GPIO_Init();
+  MX_I2C1_Init();
+}
 /* USER CODE END 4 */
 
 /**

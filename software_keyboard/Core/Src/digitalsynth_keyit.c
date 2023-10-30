@@ -44,5 +44,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
   }
   __disable_irq();
   sCont.au8I2CKeyByteAccess[0] = sw1_test;
+  sCont.sI2CKeyControl.u1Keys9 = bStateButt1;
   __enable_irq();
 }

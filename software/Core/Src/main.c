@@ -413,38 +413,43 @@ void reset_i2c(I2C_HandleTypeDef *hi2c){
   __HAL_RCC_GPIOB_CLK_ENABLE();
   
   //SCL
+  HAL_GPIO_WritePin( GPIOB, GPIO_PIN_6, GPIO_PIN_SET );
   GPIO_InitStruct.Pin = GPIO_PIN_6;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
   
   //SDA
+  HAL_GPIO_WritePin( GPIOB, GPIO_PIN_7, GPIO_PIN_SET );
   GPIO_InitStruct.Pin = GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
   
+  i2c_1bitcycle();
   
+  uint32_t u32ClockCycles = 0;
   while(!((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET))){
   //while(READ_BIT(hi2c->Instance->SR2, I2C_SR2_BUSY)){
-    for(int i=0; i<9; i++)
       i2c_1bitcycle();
+      u32ClockCycles++;
+      if( u32ClockCycles > 8 )
+      {
+        //TODO: hibakezelés
+        break;
+      }
   }
   
-  //SDA
-  GPIO_InitStruct.Pin = GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-  
-  
-  //SDA falledg while SCL High 
+  // Start: SDA falledg while SCL High 
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
   HAL_Delay(1);
-  i2c_1bitcycle();
-  i2c_1bitcycle();
-  //SDA risedg while SCL High 
+  //Stop: SDA risedg while SCL High 
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+  HAL_Delay(1);
+  
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  HAL_Delay( 10 );
+  CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
   
   MX_GPIO_Init();
   MX_I2C1_Init();
@@ -698,7 +703,7 @@ int main(void)
       status = HAL_I2C_Master_Receive(&hi2c1, slaveADDR, RxData, i2cRxSize, 30);
       //if(status == HAL_BUSY)
       //  reset_i2c(&hi2c1);
-      if(u8TimerI2C_counter >= 2 | u8TimerI2C_counter < 0){
+      if(u8TimerI2C_counter >= 2){
       //if(u8TimerI2C_counter >= 1 | u8TimerI2C_counter < 0){
         u8TimerI2C_counter = 0;
       }

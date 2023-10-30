@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "main.h"
 #include "digitalsynth_main_i2c.h"
 #include "digitalsynth_dsp.h"
@@ -18,6 +19,28 @@
 #define PI 3.14159
 #define SQR_WIDTH 0.5
 #define WAVEFOMRNUM 512
+#define U32MAX 4,294,967,295
+#define U8MAX 255
+
+enum ADSR_STATE{
+  NONE,
+  ATTACK,
+  DECAY,
+  SUSTAIN,
+  RELEASE
+};
+
+struct KEY_STATE{
+  enum ADSR_STATE state;
+  uint32_t u32AttackTime;
+  uint32_t u32DecayTime;
+  float fSustainLevel;
+  uint32_t u32ReleaseTime;
+  bool u8AdsrKeyPressed_Old;
+  uint32_t u32AdsrTime;
+  float fAmpl;
+};
+
 
 //variables
 extern uint16_t u16WaveformNum;
@@ -30,8 +53,22 @@ int32_t arri32AudioBuffer22sin[512];
 int32_t arri32AudioBuffer22sqr[512];
 int32_t arri32AudioBuffer22saw[512];
 int32_t arri32AudioBuffer22tri[512];
-double dq;
-double dDdsNum = 0;
+float fd;
+float fDdsNum = 0;
+
+//ADSR
+enum ADSR_STATE ADSR_STATE = NONE;
+struct KEY_STATE testkey = {
+  .state = NONE,
+  .u8AdsrKeyPressed_Old = 0,
+  .fAmpl = 0,
+  .u32AttackTime = 1000,
+  .u32DecayTime = 1000,
+  .fSustainLevel = 0.5,
+  .u32ReleaseTime = 1000
+};
+//bool au8AdsrKeyPressed_Old[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+//uint32_t u32AdsrTime;
 
 //test
 int32_t i32AudioDatatest[10000];
@@ -103,8 +140,8 @@ void dsp2(uint8_t u8Range, uint8_t u8PButton, uint8_t u8Waveform, uint32_t u32Au
   //u16WaveformNum = 512;
   //singen2(u32AudioAmp);
   
-  dq = (fFreq * WAVEFOMRNUM) / (float)I2S_FREQ;
-  dq = 4;
+  fd = (fFreq * WAVEFOMRNUM) / (float)I2S_FREQ;
+  //fd = 4;
 
   switch(ui2cControl.sI2CMainControl.u2ButtWaveform1){
     //sin
@@ -130,14 +167,15 @@ void dsp2(uint8_t u8Range, uint8_t u8PButton, uint8_t u8Waveform, uint32_t u32Au
   }  
 
   //for debug
-  int idds = (int)dDdsNum;
+  int idds;
+  adsr();
   for(u16Index = 0; u16Index < WAVEFOMRNUM; u16Index++){
 
     
     
-    idds = (int)dDdsNum;
+    idds = (int)floorf( fDdsNum );
 
-    i32AudioData = arri32AudioBuffer22[(int)dDdsNum];
+    i32AudioData = (int32_t)floorf( (float)arri32AudioBuffer22[idds] * (float)testkey.fAmpl);
     
     if(test< 10000){
       test++;
@@ -152,14 +190,76 @@ void dsp2(uint8_t u8Range, uint8_t u8PButton, uint8_t u8Waveform, uint32_t u32Au
     arri32AudioBuffer[ u16Index*2 + 0 ] = i32AudioData;
     arri32AudioBuffer[ u16Index*2 + 1 ] = i32AudioData;
     
-    dDdsNum += dq;
-    if(dDdsNum >= WAVEFOMRNUM)
-      dDdsNum = dDdsNum - WAVEFOMRNUM;
+    fDdsNum += fd;
+    if(fDdsNum >= WAVEFOMRNUM)
+      fDdsNum = fDdsNum - WAVEFOMRNUM;
   }
 
 
   return;
 }
+
+
+void adsr(){
+  
+  
+  uint8_t u8AdsrKeyPressed = ui2cControl.sI2CMainControl.u1Keys9;
+  
+  //uint32_t u32AdsrLastTime;
+  
+  
+
+  switch(testkey.state){
+    case NONE:
+      if( u8AdsrKeyPressed == 1){
+        testkey.u32AdsrTime = HAL_GetTick();
+        testkey.state = ATTACK;
+        break;
+      }
+      testkey.fAmpl = 0;
+      break;
+    case ATTACK:
+      if(HAL_GetTick() > (testkey.u32AttackTime + testkey.u32AdsrTime ) ){
+        testkey.u32AdsrTime = HAL_GetTick();
+        testkey.state = DECAY;
+        break;
+      }
+      testkey.fAmpl = sqrtf((float)(HAL_GetTick() - testkey.u32AdsrTime))/sqrtf((float)testkey.u32DecayTime);
+      break;
+    case DECAY:
+      if(HAL_GetTick() > (testkey.u32DecayTime + testkey.u32AdsrTime) ){
+        testkey.u32AdsrTime = HAL_GetTick();
+        testkey.state = SUSTAIN;
+        break;
+      }
+      testkey.fAmpl = (1 - testkey.fSustainLevel) * powf(testkey.u32DecayTime - (HAL_GetTick() - testkey.u32AdsrTime), 2)/powf(testkey.u32DecayTime, 2) + testkey.fSustainLevel;
+      break;
+    case SUSTAIN:
+      if( u8AdsrKeyPressed == 0 ){
+        testkey.u32AdsrTime = HAL_GetTick();
+        testkey.state = RELEASE;
+        break;
+      }   
+      testkey.fAmpl = testkey.fSustainLevel;
+      break;
+    case RELEASE:
+      if(HAL_GetTick() > (testkey.u32ReleaseTime + testkey.u32AdsrTime) )
+        testkey.state = NONE;
+      testkey.fAmpl = testkey.fSustainLevel * powf(testkey.u32ReleaseTime - (HAL_GetTick() - testkey.u32AdsrTime), 2)/powf(testkey.u32ReleaseTime, 2);
+      if(testkey.fAmpl > testkey.fSustainLevel)
+        testkey.fAmpl = 0;
+      break;  
+    default:
+      testkey.state = NONE;
+      testkey.fAmpl = 0;
+  }
+  
+  //testkey.u8AdsrKeyPressed_Old = u8AdsrKeyPressed;
+}
+
+
+
+
 
 
 

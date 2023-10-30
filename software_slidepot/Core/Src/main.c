@@ -356,6 +356,14 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c){
 }
 */
 
+void i2c_reset(I2C_HandleTypeDef *hi2c){
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  HAL_Delay( 10 );
+  CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  //MX_GPIO_Init();
+  MX_I2C1_Init();
+}
+
 
 /* USER CODE END 0 */
 
@@ -513,14 +521,13 @@ int main(void)
 
 
     //I2C communication
-    if ((HAL_GetTick() - u32LastReadTick) > TICKDELAY){
-      status = HAL_I2C_Slave_Transmit(&hi2c1, sCont.au8I2CSlidePotByteAccess, TXSIZE,30);
+    status = HAL_I2C_Slave_Transmit(&hi2c1, sCont.au8I2CSlidePotByteAccess, TXSIZE,100);
+    if(status != HAL_OK)
+      i2c_reset(&hi2c1);
       /*
       if((HAL_GetTick() - u32LastReadTick) > TOGGLEDELAY){
         HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_15);
       }*/
-      u32LastReadTick = HAL_GetTick();
-    }
       
     
     
