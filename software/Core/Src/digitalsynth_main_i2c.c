@@ -96,39 +96,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 
 
-void i2c_datatype_testing(uI2CMainControls ui2cControl){
-  //testing i2c struct
-  //write data
-  ui2cControl.sI2CMainControl.u8SlidePot[0] = 10;
-  ui2cControl.sI2CMainControl.u8SlidePot[1] = 11;
-  ui2cControl.sI2CMainControl.u8SlidePot[2] = 12;
-  ui2cControl.sI2CMainControl.u8SlidePot[3] = 13;
-  ui2cControl.sI2CMainControl.u8SlidePot[4] = 14;
-  ui2cControl.sI2CMainControl.u8SlidePot[5] = 15;
-  ui2cControl.sI2CMainControl.u8SlidePot[6] = 16;
-  ui2cControl.sI2CMainControl.u8SlidePot[7] = 17;
-  //
-  ui2cControl.sI2CMainControl.u2ButtWaveform1 = 0;
-  //ui2cControl.sI2CMainControl.u1Button1 = 0;
-  //ui2cControl.sI2CMainControl.u1Button2 = 0;
-  ui2cControl.sI2CMainControl.u1Button3 = 1;
-  ui2cControl.sI2CMainControl.u1Button4 = 0;
-  ui2cControl.sI2CMainControl.u1Button5 = 1;
-  ui2cControl.sI2CMainControl.u1Button6 = 0;
-  ui2cControl.sI2CMainControl.u1Button7 = 1;
-  ui2cControl.sI2CMainControl.u1Button8 = 0;
-  //
-  ui2cControl.sI2CMainControl.u1Button9  = 1;
-  ui2cControl.sI2CMainControl.u1Button10 = 1;
-  ui2cControl.sI2CMainControl.u1Button11 = 0;
-  ui2cControl.sI2CMainControl.u1Button12 = 1;
-  ui2cControl.sI2CMainControl.u1Button13 = 0;
-  ui2cControl.sI2CMainControl.u1Button14 = 1;
-  ui2cControl.sI2CMainControl.u1Button15 = 0;
-  ui2cControl.sI2CMainControl.u1Button16 = 1;
-  //read byte
-  uint8_t i2c_datatest = ui2cControl.au8I2CMainByteAccess[9];
-}
 
 
 */

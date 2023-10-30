@@ -73,7 +73,7 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
 
-HAL_StatusTypeDef status;
+//HAL_StatusTypeDef status;
 //hi2c1->Instance->SR1&
 
 //PCM1753 SPI setup
@@ -97,19 +97,8 @@ uI2CMainControls ui2cControl;
 uint8_t i2cRxSize;
 
 uint32_t u32LastReadTick = 0;
-
-  
-GPIO_PinState gpio1, gpio2;
-
-//idk
-int k = 0;
-
-//audio buffer
-int32_t i32AudioBuffer[ 2*256 ];
-
 //dsp
-int32_t arri32AudioBuffer[1024];
-int32_t arri32AudioBuffer2[1024];
+int32_t arri32AudioBuffer2[2048];
 uint16_t u16WaveformNum = 0;
 uint8_t u8Waveform = 0;
 uint32_t u32AudioAmp = 0;
@@ -117,16 +106,6 @@ uint8_t u8WaveformFlag = 0;
 uint8_t u8Range = 4;
 uint8_t u8PButton = 0;
 
-int32_t* pAudioBuffer;
-
-//i2s
-//static uint16_t *BufPtr0_255 = &sinwave0_255[0];
-//static int16_t *BufPtr16 = &sinwave16[0];
-//static uint16_t *BufPtr16 = &sinwave16[0];
-uint8_t u8I2SHCCW;
-uint8_t u8I2SCCW;
-uint8_t u8I2SHCCK;
-uint8_t u8I2SCCK;
 
 /* USER CODE END PV */
 
@@ -142,378 +121,17 @@ static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
-
+void ll_spi_setup();
+void ll_send_data();
+void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s1);
+void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s1);
+void i2c_1bitcycle();
+void reset_i2c(I2C_HandleTypeDef *hi2c);
+void i2c_rst2();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-/*
-void hal_spi_setup_dac(){
-  LL_SPI_TransmitData16(
-  HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R16, 1, 10);
-  HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R17, 1, 10);
-  HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R18, 1, 10);
-  HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R19, 1, 10);
-  HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R20, 1, 10);
-  HAL_SPI_Transmit(&hspi2, (uint8_t *)&SPI_R22, 1, 10);
-}
-
-*/
-void ll_spi_setup();
-void ll_send_data();
-
-
-void ll_spi_setup(){
-  //HAL_Delay(10);
-  unsigned int SPI_SETUP_SIZE = sizeof(SPI_SETUP_REG)/sizeof(SPI_SETUP_REG[0]);
-  //spi enable
-  LL_SPI_Enable(SPI2);
-  //send datas
-  ll_send_data(SPI_SETUP_REG, SPI_SETUP_SIZE);
-  
-  //nss soft??
-
-  
-}
-
-void ll_send_data(uint16_t* data, unsigned int size){
-  //*********
-  //SOURCES
-  //https://hackaday.com/2022/10/24/bare-metal-stm32-setting-up-and-using-spi/
-  //https://usermanual.wiki/Document/Reference20manualF446RE.1190689300/view
-  //http://www.disca.upv.es/aperles/arm_cortex_m3/llibre/st/STM32F439xx_User_Manual/group__spi__ll__em__write__read.html
-  //*********
-  //sending "size" number of datas
-  for(uint16_t i=0; i<size; i++)
-  {  
-    //set nss low to start communication
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
-
-    //wait while transfer register is empty
-    while(!(SPI2->SR & LL_SPI_SR_TXE));
-    //Write data (8-16 bits) into SPI_DR
-    //SPI2->DR = data[i];
-    LL_SPI_TransmitData16(SPI2, data[i]);
-  
-    //wait while transfer register is empty
-    while(!(SPI2->SR & LL_SPI_SR_TXE));
-    //Wait for SPI_SR_BSY (status register: bus busy) to become false.
-    while((SPI2->SR & LL_SPI_SR_BSY)); 
-    //nss low, end of spi comm
-    HAL_Delay(2);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
-    HAL_Delay(10);
-  }
-  //Clear overrun flag????
-  HAL_Delay(10);
-  
-  
-  //other ideas, mainly trash
-  //while(LL_SPI_ReadReg(hi2s1.Instance->SR, LL_SPI_SR_TXE));
-  //Write data (8-16 bits) into SPI_DR
-  //LL_SPI_TransmitData16(hi2s1.Instance, data);
-  
-}
-
-
-/*
-int spiReadWrite16(SPI_TypeDef* SPIx, uint16_t *rbuf , const uint16_t *tbuf, int cnt, enum spiSpeed speed){
-    // SPI 16-bit read/write transaction
-    SPI_DataSizeConfig(SPIx, SPI_DataSize_16b);
-    int i;
-    SPIx ->CR1 = (SPIx ->CR1 & ~ SPI_BaudRatePrescaler_256 ) |
-    speeds [ speed ];
-    for (i = 0; i < cnt; i++){
-        if (tbuf) {
-        SPI_I2S_SendData (SPIx , *tbuf ++);
-        } else {
-        SPI_I2S_SendData (SPIx , 0xffff);
-        }
-
-        while ( SPI_I2S_GetFlagStatus (SPIx , SPI_I2S_FLAG_RXNE ) == RESET);
-
-        if (rbuf) {
-        *rbuf ++ = SPI_I2S_ReceiveData (SPIx);
-        } else {
-        SPI_I2S_ReceiveData (SPIx);
-        }
-    }
-    //SPI_DataSizeConfig(SPIx, SPIDataSize_8b);
-    return i;
-}
-*/
-
-/*
-void HAL_I2SEx_TxRxHalfCpltCallback(I2S_HandleTypeDef *hi2s1){
-  UNUSED(hi2s1);
-}
-
-void HAL_I2SEx_TxRxCpltCallback(I2S_HandleTypeDef *hi2s1){
-  UNUSED(hi2s1);
-}
-*/
-
-
-//!!!!!!!!!!!!
-/*
-void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s1){ 
-  if(u8I2SHCC != u8Waveform){
-    audiobuffer[elso fele]másolás
-}
-void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s1){
-  if( (u8I2SHCC != waveform) & (u8I2SCC != waveform){
-    második felét átírni;
-  }
-  u8I2SHCC = waveform;
-  u8I2SCC = waveform;
-}
-*/
-
-/*
-void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s1){ 
-  if(u8I2SHCCW != ui2cControl.sI2CMainControl.u2ButtWaveform1 | u8I2SHCCK != ui2cControl.sI2CMainControl.u8TestKey1){
-    if(pAudioBuffer == arri32AudioBuffer){
-      dsp(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer2);
-    }
-    else{
-      dsp(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer);
-    }
-    u8I2SHCCW = ui2cControl.sI2CMainControl.u2ButtWaveform1;
-    u8I2SHCCK = ui2cControl.sI2CMainControl.u8TestKey1;
-
-}
-}
-void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s1){
-  if( ( (u8I2SHCCW == ui2cControl.sI2CMainControl.u2ButtWaveform1) & 
-     (u8I2SCCW != ui2cControl.sI2CMainControl.u2ButtWaveform1) ) |
-     ( (u8I2SHCCK == ui2cControl.sI2CMainControl.u8TestKey1) & 
-     (u8I2SCCK != ui2cControl.sI2CMainControl.u8TestKey1) ) ){
-    if(pAudioBuffer == arri32AudioBuffer){
-      pAudioBuffer = arri32AudioBuffer2;
-      HAL_I2S_DMAStop(hi2s1);
-      HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(hi2s1, (uint16_t*)pAudioBuffer, 2*u16WaveformNum);
-    }
-    else{
-      pAudioBuffer = arri32AudioBuffer;
-      HAL_I2S_DMAStop(hi2s1);
-      HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(hi2s1, (uint16_t*)pAudioBuffer, 2*u16WaveformNum);
-    }    
-    u8I2SCCW = ui2cControl.sI2CMainControl.u2ButtWaveform1;
-    u8I2SCCK = ui2cControl.sI2CMainControl.u8TestKey1;
-  }
-  
-}
-*/
-
-void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s1){ 
-  
-    if(pAudioBuffer == arri32AudioBuffer){
-      dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer2);
-    }
-    else{
-      dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer);
-    }
-
-}
-
-void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s1){
-  
-    if(pAudioBuffer == arri32AudioBuffer){
-      pAudioBuffer = arri32AudioBuffer2;
-      //HAL_I2S_DMAStop(hi2s1);
-      //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(hi2s1, (uint16_t*)pAudioBuffer, 2*u16WaveformNum);
-    }
-    else{
-      pAudioBuffer = arri32AudioBuffer;
-      //HAL_I2S_DMAStop(hi2s1);
-      //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(hi2s1, (uint16_t*)pAudioBuffer, 2*u16WaveformNum);
-    }  
-
-}
-
-void i2c_1bitcycle(){
-  unsigned u32CycleReadTick = 0;
-  //SCL=0
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-  //wait 1 i2c bit time
-  u32CycleReadTick = HAL_GetTick();
-  while((HAL_GetTick() - u32CycleReadTick) > 1);
-  //SCL=1
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-  //wait 1 i2c bit time
-  u32CycleReadTick = HAL_GetTick();
-  while((HAL_GetTick() - u32CycleReadTick) > 1);
-}
-
-
-void reset_i2c(I2C_HandleTypeDef *hi2c){
-  unsigned u32ResetReadTick = 0;
-  
-  /*
-  //if SDA=1 & SCL=0
-  if((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET)
-     & (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) == GPIO_PIN_RESET))
-        //wait for SCL=1
-        while(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) != GPIO_PIN_SET){};
-  
-  //if SCL=1 & SDA=1
-  if((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET)
-     & (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) == GPIO_PIN_SET)){
-        //SCL=0
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-        //wait for SCL write
-        while(!((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET)
-          & (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_6) == GPIO_PIN_RESET))){};
-        //wait 3 i2c bit time
-        u32ResetReadTick = HAL_GetTick();
-        while((HAL_GetTick() - u32ResetReadTick) > 3*ONEBITTIMEI2C){};
-     }
-  */
-  //if SDA=0
-/*
-  if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_RESET){
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
-    u32ResetReadTick = HAL_GetTick();
-    while((HAL_GetTick() - u32ResetReadTick) > 3*ONEBITTIMEI2C){};
-  }
-*/
-
-  //clear flags
-  //__HAL_I2C_CLEAR_FLAG(__HANDLE__, __FLAG__)
-    //I2C_FLAG_OVR
-    //I2C_FLAG_AF
-    //I2C_FLAG_ARLO
-    //I2C_FLAG_BERR
-    
-  //reset i2c
-  /*
-  SET_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
-  u32ResetReadTick = HAL_GetTick();
-  while((HAL_GetTick() - u32ResetReadTick) > 100*ONEBITTIMEI2C){};  
-  CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
-  MX_GPIO_Init();  
-  MX_I2C1_Init();
-*/
-  
-  
-  /*
-  // Generate Start
-  SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
-  //wait 3 i2c bit time
-  u32ResetReadTick = HAL_GetTick();
-  while((HAL_GetTick() - u32ResetReadTick) > 3*ONEBITTIMEI2C){};
-  // Generate Stop
-  SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
-  //wait 3 i2c bit time
-  u32ResetReadTick = HAL_GetTick();
-  while((HAL_GetTick() - u32ResetReadTick) > 3*ONEBITTIMEI2C){};
-*/
-
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  
-  //SCL
-  HAL_GPIO_WritePin( GPIOB, GPIO_PIN_6, GPIO_PIN_SET );
-  GPIO_InitStruct.Pin = GPIO_PIN_6;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-  
-  //SDA
-  HAL_GPIO_WritePin( GPIOB, GPIO_PIN_7, GPIO_PIN_SET );
-  GPIO_InitStruct.Pin = GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-  
-  i2c_1bitcycle();
-  
-  uint32_t u32ClockCycles = 0;
-  while(!((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET))){
-  //while(READ_BIT(hi2c->Instance->SR2, I2C_SR2_BUSY)){
-      i2c_1bitcycle();
-      u32ClockCycles++;
-      if( u32ClockCycles > 8 )
-      {
-        //TODO: hibakezelés
-        break;
-      }
-  }
-  
-  // Start: SDA falledg while SCL High 
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
-  HAL_Delay(1);
-  //Stop: SDA risedg while SCL High 
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
-  HAL_Delay(1);
-  
-  SET_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
-  HAL_Delay( 10 );
-  CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
-  
-  MX_GPIO_Init();
-  MX_I2C1_Init();
-  
-  
-  /*
-  //startstop 
-  //__HAL_LOCK(hi2c);
-  hi2c->State       = HAL_I2C_STATE_BUSY_RX;
-  hi2c->Mode        = HAL_I2C_MODE_MASTER;
-  hi2c->ErrorCode   = HAL_I2C_ERROR_NONE;
-  // Generate Start
-  //SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
-  // Generate Stop
-  SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
-  SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
-  //while(!(READ_BIT(hi2c->Instance->SR1, I2C_SR1_SB)));
-  //wait 3 i2c bit time
-  u32ResetReadTick = HAL_GetTick();
-  while((HAL_GetTick() - u32ResetReadTick) > 3){};
-  // Generate Stop
-  //SET_BIT(hi2c->Instance->CR1, I2C_CR1_STOP);
-  //wait 3 i2c bit time
-  u32ResetReadTick = HAL_GetTick();
-  while((HAL_GetTick() - u32ResetReadTick) > 3){};
-  hi2c->State = HAL_I2C_STATE_READY;
-  hi2c->Mode = HAL_I2C_MODE_NONE;
-  // Process Unlocked
-  __HAL_UNLOCK(hi2c);
-*/
-  
-  /*
-  
-  //SDA
-  GPIO_InitStruct.Pin = GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-  
-  //SCL
-  GPIO_InitStruct.Pin = GPIO_PIN_6;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  
-  gpio1 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7);
-  gpio2 = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7);
-*/
-  //MX_GPIO_Init();
-  //MX_I2C1_Init();
-
-  
-  /*
-  //start i2c
-  //set ack
-  SET_BIT(hi2c->Instance->CR1, I2C_CR1_ACK);
-  //set start
-  SET_BIT(hi2c->Instance->CR1, I2C_CR1_START);
-  while(!(READ_BIT(hi2c->Instance->SR1, I2C_SR1_SB)));*/
-  
-}
-
-
 
 /* USER CODE END 0 */
 
@@ -557,88 +175,23 @@ int main(void)
   /* USER CODE BEGIN 2 */
   
 
-  //initalization of variables
-  //memset(arri32AudioBuffer, 0, 10000);
-
-  
-  //testing i2c datatypes
-  //i2c_datatype_testing(ui2cControl);
-  
-
-  /*
-  //audio generating
-  uint32_t audio_data, audio_datal, audio_datah;
-  uint32_t audio_amplitude = 0x7FFFFFFF;      //32 BIT DATA
-  //uint32_t audio_amplitude = 0xFFFFFF/2;      //24 BIT DATA
-  //uint32_t audio_amplitude = 0x00007FFF;      //16 BIT DATA
-  uint32_t audio_highmask = 0xFFFF0000;
-  uint32_t audio_lowmask = 0x0000FFFF;
-  double audio_pi = atan(1)*4;
-  
-  for( uint16_t u16Index = 0; u16Index < 256; u16Index++ )
-  {
-    //data generating
-    audio_data= (int32_t)( audio_amplitude*sin( 2*audio_pi*u16Index/256 ) );
-    //endianness
-    audio_datah = audio_data & audio_highmask;
-    audio_datal = audio_data & audio_lowmask;
-    audio_data = (audio_datah>>16) | (audio_datal<<16);
-    //write buffers
-    i32AudioBuffer[ u16Index*2 + 0 ] = audio_data;
-    i32AudioBuffer[ u16Index*2 + 1 ] = audio_data;
-    
-    //i32AudioBuffer[ u16Index*2 + 0 ] = (int32_t)( 0x7FFFFFFF*sin( 2*3.1415*u16Index/256 ) ) >> 16;
-    //i32AudioBuffer[ u16Index*2 + 1 ] = i32AudioBuffer[ u16Index*2 ];
-    
-    //notes
-    //audio_amplitude - 0x00007FFF, no endianness change
-    //left ~180Hz, right noise
-    //reference manual 872                      https://www.st.com/resource/en/reference_manual/rm0390-stm32f446xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf
-    //pcm1753 datasheet 15                      https://www.ti.com/lit/ds/symlink/pcm1753.pdf?ts=1695897542261&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FPCM1753
-  }
-
-  */
-  
-  
   //set nss high, no spi comm yet
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
   //spi setup
   ll_spi_setup();
-  //i2s dma tx start
-  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, &sinwave[0], 256);
-  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1,(uint16_t*)&sinwave[0],(uint16_t) BUFFER_SIZE);
   
-    
-
-  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)i32AudioBuffer, 512);
+  //i2s dma tx start
   u8Range = 4;
-  //u8PButton = 0;
-  //u8Waveform = 3;
   u8Waveform = ui2cControl.sI2CMainControl.u2ButtWaveform1;
   u8PButton = ui2cControl.sI2CMainControl.u8TestKey1;
   u32AudioAmp = 0x7FFFFFFF;
-  //u32AudioAmp = 0x7FFFFFFF/2;
-  pAudioBuffer = arri32AudioBuffer2;
   singen_def(u32AudioAmp);
   sawgen_def(u32AudioAmp);
   trigen_def(u32AudioAmp);
   sqrgen_def(u32AudioAmp);
-  dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, pAudioBuffer);
-  dsp(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer);
-  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)arri32AudioBuffer, 2*u16WaveformNum);
-  HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)pAudioBuffer, 1024);
-  //HAL_StatusTypeDef status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)arri32AudioBuffer, 512);
+  dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer2);
+  status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)arri32AudioBuffer2, 2048);
   
-  
-  //I2C setup
-
-  uint8_t TxData1[3] = {0x0, 0x1, 0x0};
-  uint8_t TxData2[3] = {0x0, 0x0, 0x1};
-  
-  //uint8_t RxData[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-  
-  //HAL_StatusTypeDef status1;
-  //HAL_StatusTypeDef status2;
   
   //I2C timer
   u8TimerI2C_counter = 0;
@@ -650,25 +203,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  
-  //reset_i2c(&hi2c1);
-
-  
   while (1)
   {
-    //Transmit
-    //status1 = HAL_I2C_Master_Transmit(&hi2c1, slaveADDR, TxData1, 3, 1000);
-    //HAL_Delay(1000);
-    //status2 = HAL_I2C_Master_Transmit(&hi2c1, slaveADDR, TxData2, 3, 1000);
-    //HAL_Delay(1000);
-    
-    
-    //Recieve
-    //status1 = HAL_I2C_Master_Receive(&hi2c1, slaveADDR, RxData, 20, 1000);
-    //HAL_Delay(1000);
-    //status2 = HAL_I2C_Master_Receive(&hi2c1, slaveADDR, RxData, 20, 1000);
-
-
     if ((HAL_GetTick() - u32LastReadTick) > TICKDELAY){
       switch(u8TimerI2C_counter){
       case 0:
@@ -676,10 +212,6 @@ int main(void)
         RxData = &ui2cControl.au8I2CMainByteAccess[0];
         slaveADDR = SLIDEPOT_ADDR;
         i2cRxSize = SLIDEPOT_RXSIZE;
-        //Plugpot
-        //RxData = &ui2cControl.au8I2CMainByteAccess[0];
-        //slaveADDR = PLUGPOT_ADDR;
-        //i2cRxSize = PLUGPOT_RXSIZE;
         break;
       case 1:
         //Plugpot
@@ -701,10 +233,7 @@ int main(void)
         break;
       }
       status = HAL_I2C_Master_Receive(&hi2c1, slaveADDR, RxData, i2cRxSize, 30);
-      //if(status == HAL_BUSY)
-      //  reset_i2c(&hi2c1);
       if(u8TimerI2C_counter >= 2){
-      //if(u8TimerI2C_counter >= 1 | u8TimerI2C_counter < 0){
         u8TimerI2C_counter = 0;
       }
       else{
@@ -1086,7 +615,183 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void ll_spi_setup(){
+  //HAL_Delay(10);
+  unsigned int SPI_SETUP_SIZE = sizeof(SPI_SETUP_REG)/sizeof(SPI_SETUP_REG[0]);
+  //spi enable
+  LL_SPI_Enable(SPI2);
+  //send datas
+  ll_send_data(SPI_SETUP_REG, SPI_SETUP_SIZE);
+  
+  //nss soft??
 
+  
+}
+
+void ll_send_data(uint16_t* data, unsigned int size){
+  //*********
+  //SOURCES
+  //https://hackaday.com/2022/10/24/bare-metal-stm32-setting-up-and-using-spi/
+  //https://usermanual.wiki/Document/Reference20manualF446RE.1190689300/view
+  //http://www.disca.upv.es/aperles/arm_cortex_m3/llibre/st/STM32F439xx_User_Manual/group__spi__ll__em__write__read.html
+  //*********
+  //sending "size" number of datas
+  for(uint16_t i=0; i<size; i++)
+  {  
+    //set nss low to start communication
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
+
+    //wait while transfer register is empty
+    while(!(SPI2->SR & LL_SPI_SR_TXE));
+    //Write data (8-16 bits) into SPI_DR
+    //SPI2->DR = data[i];
+    LL_SPI_TransmitData16(SPI2, data[i]);
+  
+    //wait while transfer register is empty
+    while(!(SPI2->SR & LL_SPI_SR_TXE));
+    //Wait for SPI_SR_BSY (status register: bus busy) to become false.
+    while((SPI2->SR & LL_SPI_SR_BSY)); 
+    //nss low, end of spi comm
+    HAL_Delay(2);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+    HAL_Delay(10);
+  }
+  //Clear overrun flag????
+  HAL_Delay(10);
+  
+  
+  //other ideas, mainly trash
+  //while(LL_SPI_ReadReg(hi2s1.Instance->SR, LL_SPI_SR_TXE));
+  //Write data (8-16 bits) into SPI_DR
+  //LL_SPI_TransmitData16(hi2s1.Instance, data);
+  
+}
+
+void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s1){ 
+  dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer2);
+}
+
+void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s1){
+  dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, &arri32AudioBuffer2[1024]);
+}
+
+void i2c_1bitcycle(){
+  unsigned u32CycleReadTick = 0;
+  //SCL=0
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  //wait 1 i2c bit time
+  u32CycleReadTick = HAL_GetTick();
+  while((HAL_GetTick() - u32CycleReadTick) > 1);
+  //SCL=1
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+  //wait 1 i2c bit time
+  u32CycleReadTick = HAL_GetTick();
+  while((HAL_GetTick() - u32CycleReadTick) > 1);
+}
+
+
+void reset_i2c(I2C_HandleTypeDef *hi2c){
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  
+  //SCL
+  HAL_GPIO_WritePin( GPIOB, GPIO_PIN_6, GPIO_PIN_SET );
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  //GPIO_InitStruct.Alternate = ;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  
+  //SDA
+  HAL_GPIO_WritePin( GPIOB, GPIO_PIN_7, GPIO_PIN_SET );
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  
+  i2c_1bitcycle();
+  
+  uint32_t u32ClockCycles = 0;
+  while(!((HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_SET))){
+  //while(READ_BIT(hi2c->Instance->SR2, I2C_SR2_BUSY)){
+      i2c_1bitcycle();
+      u32ClockCycles++;
+      if( u32ClockCycles > 8 )
+      {
+        //TODO: hibakezelés
+        break;
+      }
+  }
+  
+  // Start: SDA falledg while SCL High 
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_Delay(1);
+  //Stop: SDA risedg while SCL High 
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+  HAL_Delay(1);
+  
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  HAL_Delay( 10 );
+  CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  
+  MX_GPIO_Init();
+  MX_I2C1_Init();
+}
+//not working, the bitbanging...
+void i2c_rst2()
+{
+  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+  uint8_t u8Cycles;
+ 
+  /**I2C1 GPIO Configuration
+  PB6   ------> I2C1_SCL
+  PB7   ------> I2C1_SDA
+  */
+  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
+  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+ 
+  HAL_Delay( 1u );
+  if( LL_GPIO_IsInputPinSet( GPIOB, LL_GPIO_PIN_6 ) )  // SCL == 1
+  {
+    LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);  // SCL = 0
+    HAL_Delay( 1u );
+  }
+  LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_7);  // SDA = 1
+  HAL_Delay( 1u );
+ 
+  for( u8Cycles = 0u; u8Cycles < 9u; u8Cycles++ )
+  {
+    // If the slave released SDA
+    if( LL_GPIO_IsInputPinSet( GPIOB, LL_GPIO_PIN_7 ) )  // SDA == 1
+    {
+      break;
+    }
+    else  // slave currently pulls the SDA line
+    {
+      // Generate one SCL cycle
+      LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);  // SCL = 1
+      HAL_Delay( 1u );
+      LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);  // SCL = 0
+      HAL_Delay( 1u );
+    }
+  }
+ 
+  // Generate stop condition
+  LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_7);  // SDA = 0
+  HAL_Delay( 1u );
+  LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_6);  // SCL = 1
+  HAL_Delay( 1u );
+  LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_7);  // SDA = 1
+  HAL_Delay( 1u );
+  
+  //MX_GPIO_Init();
+  //MX_I2C1_Init();
+}
 /* USER CODE END 4 */
 
 /**

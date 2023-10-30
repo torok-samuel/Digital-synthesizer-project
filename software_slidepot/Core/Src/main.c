@@ -45,8 +45,6 @@
 //I2C defines
 #define TXSIZE 12
 #define RXSIZE  3
-#define TESTING_LED_NUM 2
-#define TICKDELAY       20          //20ms - num/ms/s
 #define TOGGLEDELAY     1000        //1s -   num/ms/s
 #define BUTTDELAY       10          //10ms - num/ms/s
 
@@ -90,25 +88,14 @@ uint16_t pwmData[(24*MAX_LED)+WS2812B_RST_TIME];
 uint8_t RxData[RXSIZE];
 uint8_t rxcount = 0;
 int countAddr = 0;
-//int is_first_recvd = 0;
-//int countrxcplt = 0;
-uint8_t TxData[TXSIZE] = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
-uint8_t txcount = 0;
-int counterror = 0;
 uI2CSlidePotControls sCont;
-uint32_t u32LastReadTick = 0;
 uint32_t u32LastToggleTick = 0;
 uint32_t u32LastButtTick = 0;
 HAL_StatusTypeDef status;
 
-//Button
-uint8_t aKey_State[ROWSIZE][COLSIZE] = {{0, 0, 0, 0, 0}, 
-                                        {0, 0, 0, 0, 0},
-                                        {0, 0, 0, 0, 0}, 
-                                        {0, 0, 0, 0, 0}, 
-                                        {0, 0, 0, 0, 0}};
-
-GPIO_PinState testing_gpio = GPIO_PIN_RESET;
+//reseting i2c
+uint8_t u8ErrorFlag = 0;
+uint32_t u32ErrorTick = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,245 +112,11 @@ void send(uint8_t Green, uint8_t Red, uint8_t Blue);
 void Set_LED(int LEDnum, int Red, int Green, int Blue);
 void Set_Brightness(int brightness);
 void WS2812_Send (void);
+void i2c_reset(I2C_HandleTypeDef *hi2c);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
-  //HAL_TIM_PWM_Stop_DMA(&htim17, TIM_CHANNEL_1);
-  HAL_TIMEx_PWMN_Stop_DMA(&htim17, TIM_CHANNEL_1);
-  datasentflag=1;  
-}
-
-
-
-
-#pragma optimize=none
-void send(uint8_t Green, uint8_t Red, uint8_t Blue){
-  
-  //lol
-  uint32_t data1 = 0;
-  uint32_t data3 = 0;
-  
-  uint32_t data = (Green<<16) | (Red<<8) | Blue;
-    
-  uint16_t pwmData2[92];
-  int indx = 0;
-  
-  //data1 
-  for(int i=23; i>=0;i--){
-    if(data1&(1<<i))
-      pwmData2[indx] = 13;          //12.8
-    else
-      pwmData2[indx] = 6;           //6.4
-    
-    indx++;
-  }
-    
-  //62.5ns steps, 
-  for(int i=23; i>=0;i--){
-    if(data&(1<<i))
-      pwmData2[indx] = 13;          //12.8
-    else
-      pwmData2[indx] = 6;           //6.4
-    
-    indx++;
-  }
-  
-  //data3
-  for(int i=23; i>=0;i--){
-    if(data3&(1<<i))
-      pwmData2[indx] = 13;          //12.8
-    else
-      pwmData2[indx] = 6;           //6.4
-    
-    indx++;
-  }
-  
-  for (int i=0; i<20; i++){
-    pwmData2[indx] = 0;
-    indx++;
-  }
-  
-  HAL_TIMEx_PWMN_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *)pwmData2, indx);
-  //HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1,(uint32_t *) pwmData, 124);
-  while (!datasentflag){};
-  datasentflag = 0;
-}
-
-void Set_LED(int LEDnum, int Red, int Green, int Blue){
-  LED_Data[LEDnum][0] = LEDnum;
-  LED_Data[LEDnum][1] = Green;
-  LED_Data[LEDnum][2] = Red;
-  LED_Data[LEDnum][3] = Blue;
-}
-
-//brightness állítás linearitása miatt 
-void Set_Brightness(int brightness)
-{
-#if USE_BRIGHTNESS
-  if(brightness > 45)
-    brightness = 45;
-  for(int i = 0; i < MAX_LED; i++){
-    LED_Mod[i][0] = LED_Data[i][0];
-    for(int j = 1; j < 4; j++){
-      float angle = 90*brightness;      //in degrees
-      angle = angle * PI / 180;         //in rad
-      LED_Mod[i][j] = (LED_Data[i][j]/(tan(angle)));
-    }
-  }
-#endif
-}
-
-#pragma optimize=none
-void WS2812_Send (void)
-{
-	uint32_t indx=0;
-	uint32_t color;
-
-
-	for (int i= 0; i<MAX_LED; i++)
-	{
-#if USE_BRIGHTNESS
-		color = ((LED_Mod[i][1]<<16) | (LED_Mod[i][2]<<8) | (LED_Mod[i][3]));
-#else
-		color = ((LED_Data[i][1]<<16) | (LED_Data[i][2]<<8) | (LED_Data[i][3]));
-#endif
-
-		for (int i=23; i>=0; i--)
-		{
-			if (color&(1<<i))
-			{
-				pwmData[indx] = 13;  //12.8
-			}
-
-			else pwmData[indx] = 6;  //6.4
-
-			indx++;
-		}
-
-	}
-
-	for (int u=0; u<WS2812B_RST_TIME; u++)
-	{
-		pwmData[indx] = 0;
-		indx++;
-	}
-
-	//HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *)pwmData, indx);
-        HAL_TIMEx_PWMN_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *)pwmData, indx);
-	while (!datasentflag){};
-	datasentflag = 0;
-}
-
-
-//*******
-//I2C functions
-//*******
-
-/*
-void process_data(){
-  //TODO
-  //memcpy(mainbuf, RXDATA+1, rxcount-1);
-};
-
-void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c){
-  HAL_I2C_EnableListen_IT(hi2c);
-}
-
-void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode){
-  if(TransferDirection == I2C_DIRECTION_TRANSMIT){
-    rxcount = 0;
-    countAddr++;
-    HAL_I2C_Slave_Sequential_Receive_IT(hi2c, RxData+rxcount, 1, I2C_FIRST_FRAME);
-  }
-  else{
-    txcount = 0;
-    HAL_I2C_Slave_Seq_Transmit_IT(hi2c, TxData+txcount, 1, I2C_FIRST_FRAME);
-  }
-*/
-/*  
-  if(TransferDirection == I2C_DIRECTION_TRANSMIT){
-    if(is_first_recvd == 0){
-      rxcount = 0;
-      countAddr++;
-      HAL_I2C_Slave_Sequential_Receive_IT(hi2c, RxData+rxcount, 1, I2C_FIRST_FRAME);
-    }
-  }
-  else{
-    txcount = 0;
-    HAL_I2C_Slave_Seq_Transmit_IT(hi2c, TxData+txcount, 1, I2C_FIRST_FRAME);
-  }
-*/
-/*
-}
-
-void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c){
-  txcount++;
-  HAL_I2C_Slave_Seq_Transmit_IT(hi2c, TxData+txcount, 1, I2C_NEXT_FRAME);
-}
-
-void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c){
-  rxcount++;
-  if(rxcount < RXSIZE){
-    if(rxcount == RXSIZE - 1){
-      HAL_I2C_Slave_Sequential_Receive_IT(hi2c, RxData+rxcount, 1, I2C_LAST_FRAME);
-    }
-    else{
-      HAL_I2C_Slave_Sequential_Receive_IT(hi2c, RxData+rxcount, 1, I2C_NEXT_FRAME);
-    }
-  }
-  
-  if(rxcount == RXSIZE){
-    process_data();
-  }
-  //countrxcplt++;
-*/
-  /*
-  if(is_first_recvd == 0){
-    rxcount++;
-    is_first_recvd = 1;
-    HAL_I2C_Slave_Seq_Receive_IT(hi2c, RxData+rxcount, RxData[0], I2C_LAST_FRAME);
-  }
-  else{
-    rxcount = rxcount+RxData[0];
-    is_first_recvd=0;
-    process_data();
-  }
-*/
-/*
-}
-
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c){
-  counterror++;
-  uint32_t errorcode = HAL_I2C_GetError(hi2c);
-  if(errorcode == 4){
-    __HAL_I2C_CLEAR_FLAG(hi2c, I2C_FLAG_AF);    //clear AF Flag
-    if(txcount == 0){
-      process_data();
-    }
-    else{       //error while slave is transmitting
-      txcount = txcount - 1;
-    }
-    process_data();
-  }
-  HAL_I2C_EnableListen_IT(hi2c);
-  
-  //testing with LED
-  //Set_LED(TESTING_LED_NUM, 1, 0, 0);
-  //WS2812_Send();
-}
-*/
-
-void i2c_reset(I2C_HandleTypeDef *hi2c){
-  SET_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
-  HAL_Delay( 10 );
-  CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
-  //MX_GPIO_Init();
-  MX_I2C1_Init();
-}
-
 
 /* USER CODE END 0 */
 
@@ -401,83 +154,12 @@ int main(void)
   MX_TIM17_Init();
   MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
-  
-  //testing pwm timer
-  //uint32_t ff_var = 20; 
-  //uint32_t var0 = 1;  
-  //HAL_TIM_PWM_Start_DMA(&htim17, TIM_CHANNEL_1, &ff_var, 1);
-  
-  //Set_LED(0, 0, 1, 0);
-  Set_LED(1, 0, 0, 1);
-  //Set_LED(2, 255, 255, 255);
-  //Set_LED(3, 255, 255, 255);
-  //Set_LED(4, 255, 255, 255);
-  //Set_LED(5, 255, 255, 255);
-  //Set_LED(6, 255, 255, 255);
-  //Set_LED(7, 255, 255, 255);
-  //Set_LED(8, 255, 255, 255);
-  //Set_LED(9, 255, 255, 255);
-  //Set_LED(10, 255, 255, 255);
-  //Set_LED(11, 255, 255, 255);
-  //Set_LED(12, 255, 255, 255);
-  //Set_LED(13, 255, 255, 255);
-  //Set_LED(14, 255, 255, 255);
-  //Set_LED(15, 255, 255, 255);
-  //Set_LED(16, 255, 255, 255);
-  //Set_LED(17, 255, 255, 255);
-  //Set_LED(18, 255, 255, 255);
-  //Set_LED(19, 255, 255, 255);
-  //Set_LED(22, 255, 255, 255);
-  //Set_LED(21, 255, 255, 255);
-  //Set_LED(22, 255, 255, 255);
-  //Set_LED(23, 255, 255, 255);
-  //Set_LED(24, 255, 255, 255);
 
-  
+  Set_LED(1, 0, 0, 1);
+
+  //TODO BRIGHTNESS
   //Set_Brightness(20);
   WS2812_Send();
-  
-  //uint8_t array[] = {0, 1, 2, 4, 8, 16, 32, 64, 128};
-  //send(green, red, blue);
-  /*
-  for(int j = 0; j < 3; j++){
-    red = 0;
-    green = 0;
-    blue = 0;      
-    for(int k = 0; k < 9; k++){
-      switch(j){
-      case 0: 
-        green=array[k];
-        break;
-      case 1:
-        red=array[k];
-        break;
-      case 2:
-        blue=array[k];
-        break;
-      default:
-        break;
-      }
-      send(green, red, blue);
-      HAL_Delay(1000);      
-    }
-  }
-*/
-
-  //I2C setup
-  //if( HAL_I2C_EnableListen_IT(&hi2c1) != HAL_OK){
-  //  Error_Handler();
-  //}
-  
-  
-  //HAL_I2C_EnableListen_IT(&hi2c1);
-  /*
-  if(HAL_I2C_EnableListen_IT(&hi2c1) != HAL_OK){
-    //Transfer error in reception process
-    Error_Handler();
-  }*/
-  
-  sCont.sI2CSlidePotControl.u2ButtWaveform1 = 0;
   
   for(int i = 0; i < 12; i++)
     sCont.au8I2CSlidePotByteAccess[i] = 0;
@@ -489,10 +171,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  //HAL_Delay(1000);
   
   HAL_TIM_Base_Start_IT(&htim14);
-  u32LastReadTick = HAL_GetTick();
   u32LastToggleTick = HAL_GetTick();
   u32LastButtTick = HAL_GetTick();
   while (1)
@@ -500,106 +180,25 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    //toggle pin things
-    //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_15, GPIO_PIN_SET);
-    //HAL_Delay(1000);
-    //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_15, GPIO_PIN_RESET);
-    //HAL_Delay(1000);
-    
-    /*
-    if (Xfer_Complete ==1){
-      HAL_Delay(10);
-      //##- Put I2C peripheral in listen mode process ###########################
-      if(HAL_I2C_EnableListen_IT(&hi2c1) != HAL_OK){
-        // Transfer error in reception process
-        Error_Handler();
-      }
-      Xfer_Complete =0;
-    }
-
-*/
-
-
     //I2C communication
     status = HAL_I2C_Slave_Transmit(&hi2c1, sCont.au8I2CSlidePotByteAccess, TXSIZE,100);
-    if(status != HAL_OK)
+    
+    //if the line is busy, reset
+    if( (status != HAL_OK) & (u8ErrorFlag==0) ){
+      u8ErrorFlag = 1;
+      u32ErrorTick = HAL_GetTick();
+    }
+    if( ( status != HAL_OK ) & ( HAL_GetTick() > (u32ErrorTick+250) ) & (u8ErrorFlag==1) ){
       i2c_reset(&hi2c1);
-      /*
-      if((HAL_GetTick() - u32LastReadTick) > TOGGLEDELAY){
-        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_15);
-      }*/
-      
+      u8ErrorFlag = 0;
+    }
     
-    
+    //toggle status led
     while ((HAL_GetTick() - u32LastToggleTick) > TOGGLEDELAY){
       HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_15);
       u32LastToggleTick = HAL_GetTick();
     }
-    
-    //button
-    //getNewState();
-    //setButtonState();
-    //refreshOldState();
-    
 
-    
-    /*
-    if(hi2c1.State == HAL_I2C_STATE_LISTEN){
-      Set_LED(3, 0, 1, 0);
-    }
-    else {
-      Set_LED(3, 1, 0, 0);
-    }
-    
-    if(aKey_State[0][0] == 1){
-      Set_LED(4, 1, 0, 0);
-    }
-    else{
-      Set_LED(4, 0, 0, 0);
-    }
-    
-    Set_LED(TESTING_LED_NUM, RxData[0], RxData[1], RxData[2]);
-    */
-    
-    
-    //testing buttons
-    //noooo
-    //HAL_GPIO_WritePin(R1_GPIO_Port, R1_Pin, GPIO_PIN_RESET);
-    //testing_gpio = HAL_GPIO_ReadPin(C1_GPIO_Port, C1_Pin);
-    /*if (testing_gpio == GPIO_PIN_SET){
-      Set_LED(4, 1, 0, 0);
-    }
-    else{
-      Set_LED(4, 0, 0, 0);
-    }*/
-    //HAL_GPIO_WritePin(R1_GPIO_Port, R1_Pin, GPIO_PIN_SET);
-
-    
-    //nooo
-    //HAL_GPIO_WritePin(R1_GPIO_Port, R1_Pin, GPIO_PIN_SET);
-    //testing_gpio = HAL_GPIO_ReadPin(C1_GPIO_Port, C1_Pin);
-    //HAL_GPIO_WritePin(R1_GPIO_Port, R1_Pin, GPIO_PIN_RESET);
-    
-    //noooo
-    //HAL_GPIO_WritePin(C1_GPIO_Port, C1_Pin, GPIO_PIN_SET);
-    //testing_gpio = HAL_GPIO_ReadPin(R1_GPIO_Port, R1_Pin);
-    //HAL_GPIO_WritePin(C1_GPIO_Port, C1_Pin, GPIO_PIN_RESET);
-    
-    //yaaaaas
-    //HAL_GPIO_WritePin(C1_GPIO_Port, C1_Pin, GPIO_PIN_RESET);
-    //testing_gpio = HAL_GPIO_ReadPin(R1_GPIO_Port, R1_Pin);
-    //HAL_GPIO_WritePin(C1_GPIO_Port, C1_Pin, GPIO_PIN_SET);
-    /*
-    HAL_GPIO_WritePin(C1_GPIO_Port, C1_Pin, GPIO_PIN_RESET);
-    testing_gpio = HAL_GPIO_ReadPin(R1_GPIO_Port, R1_Pin);
-    if (testing_gpio == GPIO_PIN_RESET){
-      Set_LED(4, 1, 0, 0);
-    }
-    else{
-      Set_LED(4, 0, 0, 0);
-    }
-    HAL_GPIO_WritePin(C1_GPIO_Port, C1_Pin, GPIO_PIN_SET);
-*/
     
     if ((HAL_GetTick() - u32LastButtTick) > BUTTDELAY){
       switch(sCont.sI2CSlidePotControl.u2ButtWaveform1){
@@ -940,6 +539,132 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim){
+  HAL_TIMEx_PWMN_Stop_DMA(&htim17, TIM_CHANNEL_1);
+  datasentflag=1;  
+}
+
+#pragma optimize=none
+void send(uint8_t Green, uint8_t Red, uint8_t Blue){
+  
+  //lol
+  uint32_t data1 = 0;
+  uint32_t data3 = 0;
+  
+  uint32_t data = (Green<<16) | (Red<<8) | Blue;
+    
+  uint16_t pwmData2[92];
+  int indx = 0;
+  
+  //data1 
+  for(int i=23; i>=0;i--){
+    if(data1&(1<<i))
+      pwmData2[indx] = 13;          //12.8
+    else
+      pwmData2[indx] = 6;           //6.4
+    
+    indx++;
+  }
+    
+  //62.5ns steps, 
+  for(int i=23; i>=0;i--){
+    if(data&(1<<i))
+      pwmData2[indx] = 13;          //12.8
+    else
+      pwmData2[indx] = 6;           //6.4
+    
+    indx++;
+  }
+  
+  //data3
+  for(int i=23; i>=0;i--){
+    if(data3&(1<<i))
+      pwmData2[indx] = 13;          //12.8
+    else
+      pwmData2[indx] = 6;           //6.4
+    
+    indx++;
+  }
+  
+  for (int i=0; i<20; i++){
+    pwmData2[indx] = 0;
+    indx++;
+  }
+  
+  HAL_TIMEx_PWMN_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *)pwmData2, indx);
+  while (!datasentflag){};
+  datasentflag = 0;
+}
+
+void Set_LED(int LEDnum, int Red, int Green, int Blue){
+  LED_Data[LEDnum][0] = LEDnum;
+  LED_Data[LEDnum][1] = Green;
+  LED_Data[LEDnum][2] = Red;
+  LED_Data[LEDnum][3] = Blue;
+}
+
+void Set_Brightness(int brightness)
+{
+#if USE_BRIGHTNESS
+  if(brightness > 45)
+    brightness = 45;
+  for(int i = 0; i < MAX_LED; i++){
+    LED_Mod[i][0] = LED_Data[i][0];
+    for(int j = 1; j < 4; j++){
+      float angle = 90*brightness;      //in degrees
+      angle = angle * PI / 180;         //in rad
+      LED_Mod[i][j] = (LED_Data[i][j]/(tan(angle)));
+    }
+  }
+#endif
+}
+
+#pragma optimize=none
+void WS2812_Send (void)
+{
+	uint32_t indx=0;
+	uint32_t color;
+
+
+	for (int i= 0; i<MAX_LED; i++)
+	{
+#if USE_BRIGHTNESS
+		color = ((LED_Mod[i][1]<<16) | (LED_Mod[i][2]<<8) | (LED_Mod[i][3]));
+#else
+		color = ((LED_Data[i][1]<<16) | (LED_Data[i][2]<<8) | (LED_Data[i][3]));
+#endif
+
+		for (int i=23; i>=0; i--)
+		{
+			if (color&(1<<i))
+			{
+				pwmData[indx] = 13;  //12.8
+			}
+
+			else pwmData[indx] = 6;  //6.4
+
+			indx++;
+		}
+
+	}
+
+	for (int u=0; u<WS2812B_RST_TIME; u++)
+	{
+		pwmData[indx] = 0;
+		indx++;
+	}
+        HAL_TIMEx_PWMN_Start_DMA(&htim17, TIM_CHANNEL_1, (uint32_t *)pwmData, indx);
+	while (!datasentflag){};
+	datasentflag = 0;
+}
+
+void i2c_reset(I2C_HandleTypeDef *hi2c){
+  SET_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  HAL_Delay( 10 );
+  CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
+  MX_I2C1_Init();
+}
 
 /* USER CODE END 4 */
 

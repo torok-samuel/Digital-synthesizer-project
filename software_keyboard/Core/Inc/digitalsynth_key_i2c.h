@@ -33,16 +33,4 @@ typedef union{
 	uint8_t au8I2CKeyByteAccess[2];
 }uI2CKeyControls;
 
-
-//func
-/*
-void process_data();
-void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef *hi2c);
-void HAL_I2C_AddrCallback(I2C_HandleTypeDef *hi2c, uint8_t TransferDirection, uint16_t AddrMatchCode);
-void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef *hi2c);
-void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef *hi2c);
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c);
-*/
-
-
 #endif /* __DIGITALSYNTH_PLUG_I2C_H */

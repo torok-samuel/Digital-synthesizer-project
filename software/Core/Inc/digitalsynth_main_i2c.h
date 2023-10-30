@@ -90,12 +90,4 @@ typedef union{
 	uint8_t au8I2CMainByteAccess[27];
 }uI2CMainControls;
 
-
-/*
-void i2c_datatype_testing(uI2CMainControls ui2cControl);
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
-*/
-
-void reset_i2c(I2C_HandleTypeDef *hi2c);
-
 #endif /* __DIGITALSYNTH_MAIN_I2C_H */

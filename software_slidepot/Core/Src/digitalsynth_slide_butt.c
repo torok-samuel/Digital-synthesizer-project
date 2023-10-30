@@ -10,8 +10,6 @@
 #define COLSIZE 5
 
 // Button state
-extern uint8_t aKey_State[ROWSIZE][COLSIZE];
-// Button state
 bool bButtonStateCurr[ ROWSIZE ][ COLSIZE ] = {{false, false, false, false, false}, 
                                                {false, false, false, false, false},
                                                {false, false, false, false, false}, 
@@ -55,21 +53,14 @@ void setButtonState(){
     {
       if( (true == bButtonStateCurr[i][j]) && (false == bButtonStateOld[i][j]) )
       {
+        //BUTTON PUSHED
         if(i == 0 & j == 0)
           sCont.sI2CSlidePotControl.u2ButtWaveform1++;
-          
-        aKey_State[i][j] = 1;
       }
       else if( (false == bButtonStateCurr[i][j]) && (true == bButtonStateOld[i][j]) )
       {
-        aKey_State[i][j] = 0;
+        //BUTTON RELEASED
       }
-      
-      //LED state
-      //if( true == bButtonStateCurr[i][j] )
-          //pStrip_a->set_pixel( pStrip_a, au8LedIndex[i][j], 16, 16, 16);
-      //else
-          //pStrip_a->set_pixel( pStrip_a, au8LedIndex[i][j], 0, 0, 0);
     }
   }
 }

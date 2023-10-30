@@ -35,7 +35,6 @@
 //I2C defines
 #define TXSIZE 13
 #define RXSIZE  3
-#define TICKDELAY       20      //20ms - num/ms/s
 #define TOGGLEDELAY     1000    //1s -   num/ms/s
 
 
@@ -54,16 +53,9 @@ I2C_HandleTypeDef hi2c1;
 /* USER CODE BEGIN PV */
 
 //I2C global variables
-uint8_t RxData[RXSIZE];
-uint8_t rxcount = 0;
-int countAddr = 0;
-//int is_first_recvd = 0;
-//int countrxcplt = 0;
 uint8_t TxData[TXSIZE] = {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
 uint8_t txcount = 0;
-int counterror = 0;
 uI2CPlugPotControls sCont;
-uint32_t u32LastReadTick = 0;
 uint32_t u32LastToggleTick = 0;
 HAL_StatusTypeDef status;
 
@@ -113,29 +105,23 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_I2C1_Init();
-  /* USER CODE BEGIN 2 */
-  /*
-  if(HAL_I2C_EnableListen_IT(&hi2c1) != HAL_OK){
-    //Transfer error in reception process
-    Error_Handler();
-  }
-*/
-  
+  /* USER CODE BEGIN 2 */  
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  //HAL_Delay(1000);
+  
+  //JUST FOR TESTING
   for(int i = 0; i < 13; i++){
     sCont.au8I2CPlugPotByteAccess[i] = TxData[i];
   }
   
   
   //HAL_TIM_Base_Start_IT(&htim14);
-  u32LastReadTick = HAL_GetTick();
   u32LastToggleTick = HAL_GetTick();
-
+  uint8_t u8ErrorFlag = 0;
+  uint32_t u32ErrorTick = 0;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -143,30 +129,24 @@ int main(void)
     /* USER CODE BEGIN 3 */
     
     //I2C communication
-    if ((HAL_GetTick() - u32LastReadTick) > TICKDELAY){
-      status = HAL_I2C_Slave_Transmit(&hi2c1, sCont.au8I2CPlugPotByteAccess, TXSIZE,30);
-      if((HAL_GetTick() - u32LastReadTick) > TOGGLEDELAY){
-        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_9);
-      }
-      if(status != HAL_OK)
-        i2c_reset(&hi2c1);
-      u32LastReadTick = HAL_GetTick();
+    status = HAL_I2C_Slave_Transmit(&hi2c1, sCont.au8I2CPlugPotByteAccess, TXSIZE,30);
+    
+    //if the line is busy, reset
+    if( (status != HAL_OK) & (u8ErrorFlag==0) ){
+      u8ErrorFlag = 1;
+      u32ErrorTick = HAL_GetTick();
+    } 
+    if( ( status != HAL_OK ) & ( HAL_GetTick() > (u32ErrorTick+250) ) & (u8ErrorFlag==1) ){
+      i2c_reset(&hi2c1);
+      u8ErrorFlag = 0;
+
     }
       
-    
+    //toggle status led    
     while ((HAL_GetTick() - u32LastToggleTick) > TOGGLEDELAY){
       HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_9);
       u32LastToggleTick = HAL_GetTick();
     }
-    
-    
-    
-    /*
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);
-    HAL_Delay(1000);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_RESET);
-    HAL_Delay(1000);
-*/
   }
   /* USER CODE END 3 */
 }
@@ -459,7 +439,6 @@ void i2c_reset(I2C_HandleTypeDef *hi2c){
   SET_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
   HAL_Delay( 10 );
   CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
-  //MX_GPIO_Init();
   MX_I2C1_Init();
 }
 /* USER CODE END 4 */

@@ -58,24 +58,12 @@ TIM_HandleTypeDef htim14;
 
 /* USER CODE BEGIN PV */
 HAL_StatusTypeDef status;
-int sw1_test = 0;
 //I2C global variables
-uint8_t RxData[RXSIZE];
-uint8_t rxcount = 0;
-int countAddr = 0;
-//int is_first_recvd = 0;
-//int countrxcplt = 0;
 uint8_t TxData[TXSIZE] = {1, 0};
 uint8_t txcount = 0;
-int counterror = 0;
-
-uint32_t u32LastReadTick = 0;
 
 //keyboard
-bool bStateButt1 = false;
 uI2CKeyControls sCont;
-uint32_t switchstart = 0;
-//uint32_t tickstart = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,64 +113,28 @@ int main(void)
   MX_I2C2_Init();
   MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
-
-
-  /*
-  if(HAL_I2C_EnableListen_IT(&hi2c1) != HAL_OK){
-    // Transfer error in reception process 
-    Error_Handler();
-  }
-*/
   
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-  //tickstart = HAL_GetTick();
-  
-  u32LastReadTick = HAL_GetTick();
   HAL_TIM_Base_Start_IT(&htim14);  
+  uint8_t u8ErrorFlag = 0;
+  uint32_t u32ErrorTick = 0;
   while (1)
   {
+    //I2C communication
+    status = HAL_I2C_Slave_Transmit(&hi2c1, sCont.au8I2CKeyByteAccess, TXSIZE,100);
     
-    /*
-    while ((HAL_GetTick() - tickstart) > TICKDELAY){  
-      if(HAL_GPIO_ReadPin(SW12_GPIO_Port, SW12_Pin) == GPIO_PIN_RESET & bStateButt1 == false){
-        bStateButt1 = true;
-        if(sw1_test == 11){
-          sw1_test = 0;
-        }
-        else{
-          sw1_test++;
-        }
-        switchstart = HAL_GetTick();
-        //for switch oscillating
-        while ((HAL_GetTick() - switchstart) > SWITCHDELAY){}        
-      }
-      else if(bStateButt1 == true & HAL_GPIO_ReadPin(SW12_GPIO_Port, SW12_Pin) == GPIO_PIN_SET){
-        bStateButt1 = false;
-        switchstart = HAL_GetTick();
-        //for switch oscillating
-        while ((HAL_GetTick() - switchstart) > SWITCHDELAY){}
-      }
-      else{
-      }
-      __disable_irq();
-      sCont.au8I2CKeyByteAccess[0] = sw1_test;
-      __enable_irq();
-      tickstart = HAL_GetTick();
+    //if the line is busy, reset
+    if( (status != HAL_OK) & (u8ErrorFlag==0) ){
+      u8ErrorFlag = 1;
+      u32ErrorTick = HAL_GetTick();
     }
-*/
-    //HAL_Delay(10);
-    if ((HAL_GetTick() - u32LastReadTick) > TICKDELAY){
-      status = HAL_I2C_Slave_Transmit(&hi2c1, sCont.au8I2CKeyByteAccess, TXSIZE,30);
-      if(status != HAL_OK)
-        i2c_reset(&hi2c1);
-      u32LastReadTick = HAL_GetTick();
+    if( ( status != HAL_OK ) & ( HAL_GetTick() > (u32ErrorTick+250) ) & (u8ErrorFlag==1) ){
+      i2c_reset(&hi2c1);
+      u8ErrorFlag = 0;
     }
-      
-      
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
