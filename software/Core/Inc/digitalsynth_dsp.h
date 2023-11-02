@@ -12,5 +12,7 @@ void dsp2(uint8_t u8Range, uint8_t u8PButton, uint8_t u8Waveform, uint32_t u32Au
 void sqrgen_def(uint32_t u32AudioAmp);
 void sawgen_def(uint32_t u32AudioAmp);
 void trigen_def(uint32_t u32AudioAmp);
+void blistbspline(float fd);
+void leakyintegrator(int32_t* xn, int32_t* yn, float E, int32_t n1stelement);
 
 #endif /* __DIGITALSYNTH_MAIN_I2C_H */

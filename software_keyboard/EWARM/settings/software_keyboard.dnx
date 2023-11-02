@@ -41,8 +41,8 @@
         <ShowArgs>0</ShowArgs>
     </CallStack>
     <ArmDriver>
-        <EnableCache>0</EnableCache>
         <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
+        <EnableCache>0</EnableCache>
     </ArmDriver>
     <Trace2>
         <Enabled>0</Enabled>

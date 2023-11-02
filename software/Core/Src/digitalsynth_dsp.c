@@ -50,6 +50,15 @@ int32_t arri32AudioBuffer22saw[512];
 int32_t arri32AudioBuffer22tri[512];
 float fd;
 float fDdsNum = 0;
+//BLIST B-Slave
+float fBlistDelay;
+float fBlistIndex;
+int32_t arri32BlistBuffer[512];
+uint32_t u32AudioAmpBlist = 0x7FFFFFFF;
+float fDStep;
+float fBlistIndex;
+int32_t i32BlistIndexFloor;
+float fBlistNum;
 
 //ADSR
 enum ADSR_STATE ADSR_STATE = NONE;
@@ -206,4 +215,43 @@ void adsr(){
       testkey.state = NONE;
       testkey.fAmpl = 0;
   }
+}
+
+
+
+//switch statement
+//fBlistDelay = (float)(I2S_FREQ / fFreq);
+//fd = (fFreq * WAVEFOMRNUM) / (float)I2S_FREQ;
+
+void blistbspline(float fd){
+	memset(arri32BlistBuffer, 0, WAVEFOMRNUM);
+        //WAVEFOMRNUM???
+	while(fBlistIndex < (WAVEFOMRNUM + 2) ){
+		i32BlistIndexFloor = floorf(fBlistIndex);
+		//0 <= t/Ts < 1
+		fBlistNum = fBlistIndex - i32BlistIndexFloor;
+		if( ((i32BlistIndexFloor - 2) >= 0) & ((i32BlistIndexFloor - 2) < WAVEFOMRNUM) )
+			arri32BlistBuffer[i32BlistIndexFloor - 2] = u32AudioAmpBlist * 1/6 * powf(2+(fBlistNum-2*fBlistDelay),3);
+		if( ((i32BlistIndexFloor - 1) >= 0) & ((i32BlistIndexFloor - 1) < WAVEFOMRNUM) )
+			arri32BlistBuffer[i32BlistIndexFloor - 2] = u32AudioAmpBlist * (2/3 - powf(2+(fBlistNum-1*fBlistDelay),2) - 1/2 * powf(2+(fBlistNum-1*fBlistDelay),3)) ;
+		if( ((i32BlistIndexFloor + 0) >= 0) & (i32BlistIndexFloor < WAVEFOMRNUM) )
+			arri32BlistBuffer[i32BlistIndexFloor - 2] = u32AudioAmpBlist * (2/3 - powf(2+fBlistNum,2) - 1/2 * powf(2+fBlistNum,3)) ;
+		if( ((i32BlistIndexFloor + 1) >= 0) & (i32BlistIndexFloor < WAVEFOMRNUM) )
+			arri32BlistBuffer[i32BlistIndexFloor + 1] = u32AudioAmpBlist * 1/6 * powf(2-(fBlistNum+1*fBlistDelay),3);
+		fBlistIndex += fd;
+	}
+	fBlistIndex -= WAVEFOMRNUM;
+}
+
+//y(n) = x(n) + (1-E) * y(n-1)
+void leakyintegrator(int32_t* xn, int32_t* yn, float E, int32_t n1stelement){
+  uint16_t u16LeakyIndex;
+  for(u16LeakyIndex = 0; u16LeakyIndex < WAVEFOMRNUM; u16LeakyIndex++ ){
+    if(u16LeakyIndex == 0)
+      yn[u16LeakyIndex] = xn[u16LeakyIndex] + (1-E) * n1stelement;
+    else if(u16LeakyIndex > 0)
+      yn[u16LeakyIndex] = xn[u16LeakyIndex] + (1-E) * yn[u16LeakyIndex - 1];
+    
+  }
+  
 }
