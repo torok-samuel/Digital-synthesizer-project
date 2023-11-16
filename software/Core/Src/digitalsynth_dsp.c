@@ -52,13 +52,16 @@ float fd;
 float fDdsNum = 0;
 //BLIST B-Slave
 float fBlistDelay;
-float fBlistIndex;
+float fBlistIndex = 2;
 int32_t arri32BlistBuffer[512];
+int32_t arri32BlistBufferDC[512];
+int32_t arri32BlistBufferOut[512];
 uint32_t u32AudioAmpBlist = 0x7FFFFFFF;
 float fDStep;
 float fBlistIndex;
 int32_t i32BlistIndexFloor;
 float fBlistNum;
+int32_t i32n1stelement;
 
 //ADSR
 enum ADSR_STATE ADSR_STATE = NONE;
@@ -223,7 +226,58 @@ void adsr(){
 //fBlistDelay = (float)(I2S_FREQ / fFreq);
 //fd = (fFreq * WAVEFOMRNUM) / (float)I2S_FREQ;
 
-void blistbspline(float fd){
+void dsp_blist(uint8_t u8Range, uint8_t u8PButton, uint8_t u8Waveform, uint32_t u32AudioAmp, int32_t* arri32AudioBuffer){
+  //float fFreq = arrfFreqs[u8Range][ui2cControl.sI2CMainControl.u8TestKey1];
+  float fFreq = 311.13;
+  float fdBlist = fFreq / (float)I2S_FREQ;
+
+  /*
+  switch(ui2cControl.sI2CMainControl.u2ButtWaveform1){
+    //sin
+    case 0:
+      arri32AudioBuffer22 = arri32AudioBuffer22sin;
+      break;
+    //tri
+    case 1:
+      arri32AudioBuffer22 = arri32AudioBuffer22tri;
+      break;
+    //saw
+    case 2:
+      arri32AudioBuffer22 = arri32AudioBuffer22saw;
+      break;
+    //sqr
+    case 3:
+      arri32AudioBuffer22 = arri32AudioBuffer22sqr;
+      break;
+    //who knows
+    default:
+      arri32AudioBuffer22 = arri32AudioBuffer22sin;
+      break;
+  }  
+*/
+  //SAWTOOTH
+  blistbspline(fdBlist, u32AudioAmp);
+  dcoff(fdBlist, arri32BlistBufferDC, arri32BlistBuffer, u32AudioAmp);
+  float fEsaw=0;
+  leakyintegrator(arri32BlistBufferDC, arri32BlistBufferOut, fEsaw, i32n1stelement);
+  uint16_t u16Index;
+  for(u16Index = 0; u16Index < WAVEFOMRNUM; u16Index++)
+    arri32BlistBufferOut[u16Index] = arri32BlistBufferOut[u16Index] - 0.5 * u32AudioAmp;
+  adsr();
+  
+  //Output
+  for(u16Index = 0; u16Index < WAVEFOMRNUM; u16Index++){
+    i32AudioData = (int32_t)floorf( (float)arri32BlistBufferOut[u16Index] * (float)testkey.fAmpl);
+    i32AudioData = endianness32b(i32AudioData);
+    //write buffer
+    arri32AudioBuffer[ u16Index*2 + 0 ] = i32AudioData;
+    arri32AudioBuffer[ u16Index*2 + 1 ] = i32AudioData;
+  }
+}
+
+
+
+void blistbspline(float fd, uint32_t u32AudioAmp){
 	memset(arri32BlistBuffer, 0, WAVEFOMRNUM);
         //WAVEFOMRNUM???
 	while(fBlistIndex < (WAVEFOMRNUM + 2) ){
@@ -231,17 +285,42 @@ void blistbspline(float fd){
 		//0 <= t/Ts < 1
 		fBlistNum = fBlistIndex - i32BlistIndexFloor;
 		if( ((i32BlistIndexFloor - 2) >= 0) & ((i32BlistIndexFloor - 2) < WAVEFOMRNUM) )
-			arri32BlistBuffer[i32BlistIndexFloor - 2] = u32AudioAmpBlist * 1/6 * powf(2+(fBlistNum-2*fBlistDelay),3);
+			arri32BlistBuffer[i32BlistIndexFloor - 2] = u32AudioAmp * 1/6 * powf(2+(fBlistNum-2),3);
 		if( ((i32BlistIndexFloor - 1) >= 0) & ((i32BlistIndexFloor - 1) < WAVEFOMRNUM) )
-			arri32BlistBuffer[i32BlistIndexFloor - 2] = u32AudioAmpBlist * (2/3 - powf(2+(fBlistNum-1*fBlistDelay),2) - 1/2 * powf(2+(fBlistNum-1*fBlistDelay),3)) ;
-		if( ((i32BlistIndexFloor + 0) >= 0) & (i32BlistIndexFloor < WAVEFOMRNUM) )
-			arri32BlistBuffer[i32BlistIndexFloor - 2] = u32AudioAmpBlist * (2/3 - powf(2+fBlistNum,2) - 1/2 * powf(2+fBlistNum,3)) ;
-		if( ((i32BlistIndexFloor + 1) >= 0) & (i32BlistIndexFloor < WAVEFOMRNUM) )
-			arri32BlistBuffer[i32BlistIndexFloor + 1] = u32AudioAmpBlist * 1/6 * powf(2-(fBlistNum+1*fBlistDelay),3);
+			arri32BlistBuffer[i32BlistIndexFloor - 1] = u32AudioAmp * (2/3 - powf(fBlistNum-1,2) - 1/2 * powf(fBlistNum-1,3));
+		if( ((i32BlistIndexFloor + 0) >= 0) & ((i32BlistIndexFloor - 0) < WAVEFOMRNUM) )
+			arri32BlistBuffer[i32BlistIndexFloor - 0] = u32AudioAmp * (2/3 - powf(fBlistNum+0,2) + 1/2 * powf(fBlistNum+0,3));
+		if( ((i32BlistIndexFloor + 1) >= 0) & ((i32BlistIndexFloor + 1) < WAVEFOMRNUM) )
+			arri32BlistBuffer[i32BlistIndexFloor + 1] = u32AudioAmp * 1/6 * powf(2-(fBlistNum+1),3);
 		fBlistIndex += fd;
 	}
 	fBlistIndex -= WAVEFOMRNUM;
 }
+
+
+void biblistbspline(float fdbi, uint8_t u8Flagbi, uint32_t u32AudioAmp){
+	memset(arri32BlistBuffer, 0, WAVEFOMRNUM);
+        //WAVEFOMRNUM???
+	while(fBlistIndex < (WAVEFOMRNUM + 2) ){
+		i32BlistIndexFloor = floorf(fBlistIndex);
+		//0 <= t/Ts < 1
+		fBlistNum = fBlistIndex - i32BlistIndexFloor;
+		if( ((i32BlistIndexFloor - 2) >= 0) & ((i32BlistIndexFloor - 2) < WAVEFOMRNUM) )
+			arri32BlistBuffer[i32BlistIndexFloor - 2] = u32AudioAmp * 1/6 * powf(2+(fBlistNum-2),3) * u8Flagbi;
+		if( ((i32BlistIndexFloor - 1) >= 0) & ((i32BlistIndexFloor - 1) < WAVEFOMRNUM) )
+			arri32BlistBuffer[i32BlistIndexFloor - 1] = u32AudioAmp * (2/3 - powf(fBlistNum-1,2) - 1/2 * powf(fBlistNum-1,3)) * u8Flagbi;
+		if( ((i32BlistIndexFloor + 0) >= 0) & ((i32BlistIndexFloor - 0) < WAVEFOMRNUM) )
+			arri32BlistBuffer[i32BlistIndexFloor - 0] = u32AudioAmp * (2/3 - powf(fBlistNum+0,2) + 1/2 * powf(fBlistNum+0,3)) * u8Flagbi;
+		if( ((i32BlistIndexFloor + 1) >= 0) & ((i32BlistIndexFloor + 1) < WAVEFOMRNUM) )
+			arri32BlistBuffer[i32BlistIndexFloor + 1] = u32AudioAmp * 1/6 * powf(2-(fBlistNum+1),3) * u8Flagbi;
+		fBlistIndex += fdbi;
+                u8Flagbi = -1 * u8Flagbi;
+	}
+	fBlistIndex -= WAVEFOMRNUM;
+}
+
+
+
 
 //y(n) = x(n) + (1-E) * y(n-1)
 void leakyintegrator(int32_t* xn, int32_t* yn, float E, int32_t n1stelement){
@@ -249,9 +328,16 @@ void leakyintegrator(int32_t* xn, int32_t* yn, float E, int32_t n1stelement){
   for(u16LeakyIndex = 0; u16LeakyIndex < WAVEFOMRNUM; u16LeakyIndex++ ){
     if(u16LeakyIndex == 0)
       yn[u16LeakyIndex] = xn[u16LeakyIndex] + (1-E) * n1stelement;
-    else if(u16LeakyIndex > 0)
+    else
       yn[u16LeakyIndex] = xn[u16LeakyIndex] + (1-E) * yn[u16LeakyIndex - 1];
     
-  }
-  
+    if(u16LeakyIndex == WAVEFOMRNUM)
+      n1stelement = yn[u16LeakyIndex];    
+  }  
+}
+
+void dcoff(float fd, int32_t* yndcoff, int32_t* ynin, uint32_t u32AudioAmp){
+  uint16_t u16Index;
+  for(u16Index = 0; u16Index < WAVEFOMRNUM; u16Index++)
+    yndcoff[u16Index] = ynin[u16Index] - u32AudioAmp * 1/fd;
 }
