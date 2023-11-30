@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "digitalsynth_plug_i2c.h"
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -36,6 +37,9 @@
 #define TXSIZE 13
 #define RXSIZE  3
 #define TOGGLEDELAY     1000    //1s -   num/ms/s
+#define TOGGLEDELAY2     10      //10ms -   num/ms/s
+
+#define ADC_BUF_LEN 2*8
 
 
 /* USER CODE END PD */
@@ -47,6 +51,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -59,11 +64,25 @@ uI2CPlugPotControls sCont;
 uint32_t u32LastToggleTick = 0;
 HAL_StatusTypeDef status;
 
+//adc
+uint8_t arru8adc_buf[ADC_BUF_LEN];
+uint8_t * pu8adc_bufcurr;
+
+//SW
+uint32_t u32SWReadTick;
+GPIO_TypeDef* arrSWGPIOPort[8] = 
+{SW1p_GPIO_Port, SW2p_GPIO_Port, SW3p_GPIO_Port, SW4p_GPIO_Port, SW5p_GPIO_Port, SW6p_GPIO_Port, SW7p_GPIO_Port, SW8p_GPIO_Port};
+uint16_t arrSWPin[8] = 
+{SW1p_Pin, SW2p_Pin, SW3p_Pin, SW4p_Pin, SW5p_Pin, SW6p_Pin, SW7p_Pin, SW8p_Pin};
+
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
@@ -72,7 +91,6 @@ void i2c_reset();
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /**
@@ -103,9 +121,10 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC1_Init();
   MX_I2C1_Init();
-  /* USER CODE BEGIN 2 */  
+  /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
@@ -117,9 +136,13 @@ int main(void)
     sCont.au8I2CPlugPotByteAccess[i] = TxData[i];
   }
   
+  //adc
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)arru8adc_buf, ADC_BUF_LEN);
+  
   
   //HAL_TIM_Base_Start_IT(&htim14);
   u32LastToggleTick = HAL_GetTick();
+  u32SWReadTick = HAL_GetTick();
   uint8_t u8ErrorFlag = 0;
   uint32_t u32ErrorTick = 0;
   while (1)
@@ -146,6 +169,22 @@ int main(void)
     while ((HAL_GetTick() - u32LastToggleTick) > TOGGLEDELAY){
       HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_9);
       u32LastToggleTick = HAL_GetTick();
+    }
+    
+    
+    sCont.sI2CPlugPotControl.u1SW1 = (HAL_GPIO_ReadPin(arrSWGPIOPort[0], arrSWPin[0]) == GPIO_PIN_SET);
+    
+    //SW read
+    while ((HAL_GetTick() - u32SWReadTick) > TOGGLEDELAY2){
+      sCont.sI2CPlugPotControl.u1SW1 = (HAL_GPIO_ReadPin(arrSWGPIOPort[0], arrSWPin[0]) == GPIO_PIN_SET);
+      sCont.sI2CPlugPotControl.u1SW2 = (HAL_GPIO_ReadPin(arrSWGPIOPort[1], arrSWPin[1]) == GPIO_PIN_SET);
+      sCont.sI2CPlugPotControl.u1SW3 = (HAL_GPIO_ReadPin(arrSWGPIOPort[2], arrSWPin[2]) == GPIO_PIN_SET);
+      sCont.sI2CPlugPotControl.u1SW4 = (HAL_GPIO_ReadPin(arrSWGPIOPort[3], arrSWPin[3]) == GPIO_PIN_SET);
+      sCont.sI2CPlugPotControl.u1SW5 = (HAL_GPIO_ReadPin(arrSWGPIOPort[4], arrSWPin[4]) == GPIO_PIN_SET);
+      sCont.sI2CPlugPotControl.u1SW6 = (HAL_GPIO_ReadPin(arrSWGPIOPort[5], arrSWPin[5]) == GPIO_PIN_SET);
+      sCont.sI2CPlugPotControl.u1SW7 = (HAL_GPIO_ReadPin(arrSWGPIOPort[6], arrSWPin[6]) == GPIO_PIN_SET);
+      sCont.sI2CPlugPotControl.u1SW8 = (HAL_GPIO_ReadPin(arrSWGPIOPort[7], arrSWPin[7]) == GPIO_PIN_SET);
+      u32SWReadTick = HAL_GetTick();
     }
   }
   /* USER CODE END 3 */
@@ -212,21 +251,22 @@ static void MX_ADC1_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_8B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.ScanConvMode = ADC_SCAN_SEQ_FIXED;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.NbrOfConversion = 8;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-  hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
+  hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_39CYCLES_5;
+  hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
   hadc1.Init.OversamplingMode = DISABLE;
   hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -237,7 +277,8 @@ static void MX_ADC1_Init(void)
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_0;
-  sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -246,6 +287,7 @@ static void MX_ADC1_Init(void)
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -254,6 +296,7 @@ static void MX_ADC1_Init(void)
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -262,6 +305,7 @@ static void MX_ADC1_Init(void)
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_4;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -270,6 +314,7 @@ static void MX_ADC1_Init(void)
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -278,6 +323,7 @@ static void MX_ADC1_Init(void)
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -286,6 +332,7 @@ static void MX_ADC1_Init(void)
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = ADC_REGULAR_RANK_7;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -294,38 +341,7 @@ static void MX_ADC1_Init(void)
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_7;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_8;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_9;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_10;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_15;
+  sConfig.Rank = ADC_REGULAR_RANK_8;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -381,6 +397,22 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
 
@@ -441,6 +473,30 @@ void i2c_reset(I2C_HandleTypeDef *hi2c){
   CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
   MX_I2C1_Init();
 }
+
+//adc double buffering
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc){
+  sCont.sI2CPlugPotControl.u8Plugpot[0] = arru8adc_buf[0];
+  sCont.sI2CPlugPotControl.u8Plugpot[1] = arru8adc_buf[1];
+  sCont.sI2CPlugPotControl.u8Plugpot[2] = arru8adc_buf[2];
+  sCont.sI2CPlugPotControl.u8Plugpot[3] = arru8adc_buf[3];
+  sCont.sI2CPlugPotControl.u8Plugpot[4] = arru8adc_buf[4];
+  sCont.sI2CPlugPotControl.u8Plugpot[5] = arru8adc_buf[5];
+  sCont.sI2CPlugPotControl.u8Plugpot[6] = arru8adc_buf[6];
+  sCont.sI2CPlugPotControl.u8Plugpot[7] = arru8adc_buf[7];
+}
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+  sCont.sI2CPlugPotControl.u8Plugpot[0] = arru8adc_buf[8];
+  sCont.sI2CPlugPotControl.u8Plugpot[1] = arru8adc_buf[9];
+  sCont.sI2CPlugPotControl.u8Plugpot[2] = arru8adc_buf[10];
+  sCont.sI2CPlugPotControl.u8Plugpot[3] = arru8adc_buf[11];
+  sCont.sI2CPlugPotControl.u8Plugpot[4] = arru8adc_buf[12];
+  sCont.sI2CPlugPotControl.u8Plugpot[5] = arru8adc_buf[13];
+  sCont.sI2CPlugPotControl.u8Plugpot[6] = arru8adc_buf[14];
+  sCont.sI2CPlugPotControl.u8Plugpot[7] = arru8adc_buf[15];
+}
+
 /* USER CODE END 4 */
 
 /**

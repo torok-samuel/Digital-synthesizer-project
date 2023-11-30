@@ -11,10 +11,10 @@ typedef union{
 		//*************
 		uint8_t u8SlidePot[8];
 		//Button 1st byte
-		uint8_t u2ButtWaveform1:2;
+		uint8_t u2ButtWaveform1:4;
 		//uint8_t u1Button2:1;
-		uint8_t u1Button3:1;
-		uint8_t u1Button4:1;
+		//uint8_t u1Button3:1;
+		///uint8_t u1Button4:1;
 		uint8_t u1Button5:1;
 		uint8_t u1Button6:1;
 		uint8_t u1Button7:1;

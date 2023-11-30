@@ -19,6 +19,7 @@ extern uI2CKeyControls sCont;
 uint32_t switchstart = 0;
 //test
 extern int sw1_test;
+//bool change;
 
 //func
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){

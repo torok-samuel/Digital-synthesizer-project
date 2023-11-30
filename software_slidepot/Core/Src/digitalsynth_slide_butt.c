@@ -54,8 +54,12 @@ void setButtonState(){
       if( (true == bButtonStateCurr[i][j]) && (false == bButtonStateOld[i][j]) )
       {
         //BUTTON PUSHED
-        if(i == 0 & j == 0)
+        if(i == 0 & j == 0){
           sCont.sI2CSlidePotControl.u2ButtWaveform1++;
+          if(sCont.sI2CSlidePotControl.u2ButtWaveform1 > 6)
+            sCont.sI2CSlidePotControl.u2ButtWaveform1 = 0;
+        }
+        
       }
       else if( (false == bButtonStateCurr[i][j]) && (true == bButtonStateOld[i][j]) )
       {

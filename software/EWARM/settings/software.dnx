@@ -24,11 +24,11 @@
         <CStepIntDis>_ 0</CStepIntDis>
     </StLinkDriver>
     <ArmDriver>
-        <EnableCache>0</EnableCache>
         <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
+        <EnableCache>0</EnableCache>
     </ArmDriver>
     <DebugChecksum>
-        <Checksum>130200540</Checksum>
+        <Checksum>1247091167</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -69,6 +69,9 @@
     </array_types>
     <watch_formats>
         <Fmt0>{W}42:arri32AudioBuffer2	4	5</Fmt0>
+        <Fmt1>{W}42:arri32BlistBuffer	0	5</Fmt1>
+        <Fmt2>{W}42:fLfoRes	0	9</Fmt2>
+        <Fmt3>{W}42:ftest2	0	9</Fmt3>
     </watch_formats>
     <Trace2>
         <Enabled>0</Enabled>

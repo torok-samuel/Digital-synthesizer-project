@@ -182,14 +182,19 @@ int main(void)
   
   //i2s dma tx start
   u8Range = 4;
-  u8Waveform = ui2cControl.sI2CMainControl.u2ButtWaveform1;
-  u8PButton = ui2cControl.sI2CMainControl.u8TestKey1;
+  //u8Waveform = ui2cControl.sI2CMainControl.u2ButtWaveform1;
+  //u8PButton = ui2cControl.sI2CMainControl.u8TestKey1;
+  u8Waveform = 1;
+  u8PButton = 1;
   u32AudioAmp = 0x7FFFFFFF;
   singen_def(u32AudioAmp);
   sawgen_def(u32AudioAmp);
   trigen_def(u32AudioAmp);
   sqrgen_def(u32AudioAmp);
   dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer2);
+  //status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)arri32AudioBuffer2, 2048);
+  
+  //dsp_blitbspline(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer2);
   status = HAL_I2S_Transmit_DMA(&hi2s1, (uint16_t*)arri32AudioBuffer2, 2048);
   
   
@@ -669,10 +674,12 @@ void ll_send_data(uint16_t* data, unsigned int size){
 
 void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s1){ 
   dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer2);
+  //dsp_blitbspline(u8Range, u8PButton, u8Waveform, u32AudioAmp, arri32AudioBuffer2);
 }
 
 void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s1){
   dsp2(u8Range, u8PButton, u8Waveform, u32AudioAmp, &arri32AudioBuffer2[1024]);
+  //dsp_blitbspline(u8Range, u8PButton, u8Waveform, u32AudioAmp, &arri32AudioBuffer2[1024]);
 }
 
 void i2c_1bitcycle(){

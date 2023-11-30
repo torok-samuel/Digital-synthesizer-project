@@ -10,7 +10,7 @@ typedef union{
     //************
     //*PlugPot uC*
     //************
-    uint8_t Plugpot[12];
+    uint8_t u8Plugpot[12];
     //DPDT Switches
     uint8_t u1SW1:1;
     uint8_t u1SW2:1;

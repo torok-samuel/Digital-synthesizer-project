@@ -53,6 +53,8 @@
 #define ROWSIZE 5
 #define COLSIZE 5
 
+//adc
+#define ADC_BUF_LEN 2*8
     
     
 /* USER CODE END PD */
@@ -64,6 +66,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -96,6 +99,10 @@ HAL_StatusTypeDef status;
 //reseting i2c
 uint8_t u8ErrorFlag = 0;
 uint32_t u32ErrorTick = 0;
+
+//adc
+uint8_t arru8adc_buf[ADC_BUF_LEN];
+uint8_t * pu8adc_bufcurr;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -171,6 +178,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  
+  //adc dma
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)arru8adc_buf, ADC_BUF_LEN);
   
   HAL_TIM_Base_Start_IT(&htim14);
   u32LastToggleTick = HAL_GetTick();
@@ -286,21 +296,20 @@ static void MX_ADC1_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_8B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.NbrOfConversion = 8;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-  hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_1CYCLE_5;
+  hadc1.Init.SamplingTimeCommon1 = ADC_SAMPLETIME_39CYCLES_5;
   hadc1.Init.SamplingTimeCommon2 = ADC_SAMPLETIME_1CYCLE_5;
   hadc1.Init.OversamplingMode = DISABLE;
   hadc1.Init.TriggerFrequencyMode = ADC_TRIGGER_FREQ_HIGH;
@@ -314,6 +323,69 @@ static void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = ADC_REGULAR_RANK_7;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_7;
+  sConfig.Rank = ADC_REGULAR_RANK_8;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -480,6 +552,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel2_3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
 
 }
 
@@ -664,6 +739,29 @@ void i2c_reset(I2C_HandleTypeDef *hi2c){
   HAL_Delay( 10 );
   CLEAR_BIT(hi2c->Instance->CR1, I2C_CR1_SWRST);
   MX_I2C1_Init();
+}
+
+//adc double buffering
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc){
+  sCont.sI2CSlidePotControl.u8SlidePot[0] = arru8adc_buf[0];
+  sCont.sI2CSlidePotControl.u8SlidePot[1] = arru8adc_buf[1];
+  sCont.sI2CSlidePotControl.u8SlidePot[2] = arru8adc_buf[2];
+  sCont.sI2CSlidePotControl.u8SlidePot[3] = arru8adc_buf[3];
+  sCont.sI2CSlidePotControl.u8SlidePot[4] = arru8adc_buf[4];
+  sCont.sI2CSlidePotControl.u8SlidePot[5] = arru8adc_buf[5];
+  sCont.sI2CSlidePotControl.u8SlidePot[6] = arru8adc_buf[6];
+  sCont.sI2CSlidePotControl.u8SlidePot[7] = arru8adc_buf[7];
+}
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+  sCont.sI2CSlidePotControl.u8SlidePot[0] = arru8adc_buf[8];
+  sCont.sI2CSlidePotControl.u8SlidePot[1] = arru8adc_buf[9];
+  sCont.sI2CSlidePotControl.u8SlidePot[2] = arru8adc_buf[10];
+  sCont.sI2CSlidePotControl.u8SlidePot[3] = arru8adc_buf[11];
+  sCont.sI2CSlidePotControl.u8SlidePot[4] = arru8adc_buf[12];
+  sCont.sI2CSlidePotControl.u8SlidePot[5] = arru8adc_buf[13];
+  sCont.sI2CSlidePotControl.u8SlidePot[6] = arru8adc_buf[14];
+  sCont.sI2CSlidePotControl.u8SlidePot[7] = arru8adc_buf[15];
 }
 
 /* USER CODE END 4 */
